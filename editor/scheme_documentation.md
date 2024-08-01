@@ -340,10 +340,31 @@ Each `clause` may be of the following form:
 The last `clause` may instead be of the form `(else [expression] ...)`, which
 is equivalent to `(#t [expression] ...)`.
 
-Starts with the first `clause`. Evaluates `test`. If true, evaluate the
-`expression`s in order, returning the last one. If there are none, return what
-`test` evaluated to instead. If `test` is false, proceed to the next `clause`.
-If there are no more `clause`s, the return value is undefined.
+Starts with the first `clause`. Evaluates `test`. If true, evaluate
+the `expression`s in order, returning the result of the last one. If
+there are none, return what `test` evaluated to instead. If `test` is
+false, proceed to the next `clause`. If there are no more `clause`s,
+the return value is undefined.
+
+### **`case`**
+
+    (case <key> <clause> ...)
+
+The `key` can be any expression. Each `clause` may be of the following
+form:
+
+    (([value] ...) <expression> ...)
+
+The last `clause` may instead be of the form `(else <expression>
+...)`.
+
+Evaluates `key`. Then, starting with the first `clause`, checks if a
+clause has a `value` that is equivalent (according to the `eqv?`
+procedure) to the result of evaluating `key`. Evaluates the
+`expression`s of the first matching clause in order, returning the
+result of the last one. If there are no matching clauses, evaluates
+the `expression`s of the else clause, if present. The return value is
+undefined if there are no matching clauses and no else clause.
 
 ### **`and`**
 
@@ -373,6 +394,31 @@ Next, a new frame that extends the current environment is created and each
 
 Finally the `body` expressions are evaluated in order, returning the evaluated
 last one.
+
+### **`let*`**
+
+    (let* ([binding] ...) <body> ...)
+
+Similar to `let`, except that the `expression` of each `binding` is evaluated
+in an environment that contains the preceding bindings. In other words,
+
+```scheme
+(let* (<binding1> <binding2> ... <bindingN>) <body> ...)
+```
+
+is equivalent to
+
+```scheme
+(let (<binding1>)
+  (let (<binding2>)
+    ...
+      (let (<bindingN>)
+        <body> ...
+      )
+    ...
+  )
+)
+```
 
 ### **`begin`**
 
