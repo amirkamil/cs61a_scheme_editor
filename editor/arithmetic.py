@@ -1,3 +1,4 @@
+import math
 from typing import List
 
 from datamodel import Expression, Number, bools, SingletonFalse, ValueHolder, Pair, SingletonTrue
@@ -191,3 +192,49 @@ class IsEqual(BuiltIn):
         else:
             return IsEqv().execute_evaluated(operands, frame)
 
+
+# EECS 390 additions
+
+@global_attr("round")
+class Round(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        assert_all_numbers([operand])
+        below = math.floor(operand.value)
+        above = math.ceil(operand.value)
+        if above == below:
+            return Number(above)
+        if operand.value - below < above - operand.value:
+            return Number(below)
+        if above - operand.value < operand.value - below:
+            return Number(above)
+        return Number(below if below % 2 == 0 else above)
+
+
+@global_attr("max")
+class Max(BuiltIn):
+    def execute_evaluated(self, operands: List[Expression], frame: Frame):
+        verify_min_callable_length(self, 1, len(operands))
+        assert_all_numbers(operands)
+        return Number(max(operand.value for operand in operands))
+
+
+@global_attr("min")
+class Min(BuiltIn):
+    def execute_evaluated(self, operands: List[Expression], frame: Frame):
+        verify_min_callable_length(self, 1, len(operands))
+        assert_all_numbers(operands)
+        return Number(min(operand.value for operand in operands))
+
+
+@global_attr("positive?")
+class IsPositive(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        assert_all_numbers([operand])
+        return bools[operand.value > 0]
+
+
+@global_attr("negative?")
+class IsNegative(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        assert_all_numbers([operand])
+        return bools[operand.value < 0]

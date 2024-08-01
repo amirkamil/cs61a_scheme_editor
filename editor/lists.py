@@ -1,7 +1,9 @@
+import itertools
 from typing import List
 
 import log
-from datamodel import Expression, Pair, Nil, Number, Undefined, NilType, Promise
+import arithmetic
+from datamodel import Expression, Pair, Nil, Number, bools, Undefined, NilType, Promise, SingletonTrue
 from environment import global_attr
 from evaluate_apply import Frame
 from helper import pair_to_list, make_list, verify_exact_callable_length
@@ -112,3 +114,125 @@ class SetCdr(BuiltIn):
             pair.rest = val
             log.logger.raw_out("WARNING: Mutation operations on pairs are not yet supported by the debugger.")
             return Undefined
+
+
+# EECS 390 additions
+
+@global_attr("reverse")
+class Reverse(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        if not isinstance(operand, Pair) and operand is not Nil:
+            raise OperandDeduceError(f"Unable to reverse, as {operand} is not a valid list.")
+        elements = pair_to_list(operand)
+        out = Nil
+        for expr in elements:
+            out = Pair(expr, out)
+        return out
+
+
+@global_attr("memq")
+class Memq(BuiltIn):
+    def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
+        verify_exact_callable_length(self, 2, len(operands))
+        value, sequence = operands
+        if not isinstance(sequence, Pair) and sequence is not Nil:
+            raise OperandDeduceError(f"memq expected a list as the second argument, received {sequence}.")
+        for item in pair_to_list(sequence):
+            if arithmetic.IsEq().execute_evaluated([value, item], frame) is SingletonTrue:
+                return item
+        return bools[0]
+
+
+@global_attr("memv")
+class Memv(BuiltIn):
+    def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
+        verify_exact_callable_length(self, 2, len(operands))
+        value, sequence = operands
+        if not isinstance(sequence, Pair) and sequence is not Nil:
+            raise OperandDeduceError(f"memv expected a list as the second argument, received {sequence}.")
+        for item in pair_to_list(sequence):
+            if arithmetic.IsEqv().execute_evaluated([value, item], frame) is SingletonTrue:
+                return item
+        return bools[0]
+
+
+@global_attr("member")
+class Member(BuiltIn):
+    def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
+        verify_exact_callable_length(self, 2, len(operands))
+        value, sequence = operands
+        if not isinstance(sequence, Pair) and sequence is not Nil:
+            raise OperandDeduceError(f"member expected a list as the second argument, received {sequence}.")
+        for item in pair_to_list(sequence):
+            if arithmetic.IsEqual().execute_evaluated([value, item], frame) is SingletonTrue:
+                return item
+        return bools[0]
+
+
+@global_attr("assq")
+class Assq(BuiltIn):
+    def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
+        verify_exact_callable_length(self, 2, len(operands))
+        value, sequence = operands
+        if not isinstance(sequence, Pair) and sequence is not Nil:
+            raise OperandDeduceError(f"assq expected a list as the second argument, received {sequence}.")
+        for item in pair_to_list(sequence):
+            if not isinstance(item, Pair):
+                raise OperandDeduceError(f"association list expected a pair, received {item}.")
+            if arithmetic.IsEq().execute_evaluated([value, item.first], frame) is SingletonTrue:
+                return item
+        return bools[0]
+
+
+@global_attr("assv")
+class Assv(BuiltIn):
+    def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
+        verify_exact_callable_length(self, 2, len(operands))
+        value, sequence = operands
+        if not isinstance(sequence, Pair) and sequence is not Nil:
+            raise OperandDeduceError(f"assv expected a list as the second argument, received {sequence}.")
+        for item in pair_to_list(sequence):
+            if not isinstance(item, Pair):
+                raise OperandDeduceError(f"association list expected a pair, received {item}.")
+            if arithmetic.IsEqv().execute_evaluated([value, item.first], frame) is SingletonTrue:
+                return item
+        return bools[0]
+
+
+@global_attr("assoc")
+class Assoc(BuiltIn):
+    def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
+        verify_exact_callable_length(self, 2, len(operands))
+        value, sequence = operands
+        if not isinstance(sequence, Pair) and sequence is not Nil:
+            raise OperandDeduceError(f"assoc expected a list as the second argument, received {sequence}.")
+        for item in pair_to_list(sequence):
+            if not isinstance(item, Pair):
+                raise OperandDeduceError(f"association list expected a pair, received {item}.")
+            if arithmetic.IsEqual().execute_evaluated([value, item.first], frame) is SingletonTrue:
+                return item
+        return bools[0]
+
+
+# generate pair accessor combinations
+def make_combinator(seq):
+    class_name = f"C{''.join(seq)}r"
+    func_name = f"c{''.join(seq)}r"
+
+    @global_attr(func_name)
+    class Comb(SingleOperandPrimitive):
+        __name__ = class_name
+        __qualname__ = class_name
+
+        def execute_simple(self, operand: Expression) -> Expression:
+            for op in reversed(seq):
+                accessor = Car() if op == 'a' else Cdr()
+                operand = accessor.execute_simple(operand)
+            return operand
+
+    globals()[class_name] = Comb
+
+
+for i in range(2, 5):
+    for seq in itertools.product(("a", "d"), repeat=i):
+        make_combinator(seq)

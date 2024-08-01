@@ -78,3 +78,11 @@ class IsString(SingleOperandPrimitive):
 class IsSymbol(SingleOperandPrimitive):
     def execute_simple(self, operand: Expression) -> Expression:
         return bools[isinstance(operand, Symbol)]
+
+
+# EECS 390 additions
+
+@global_attr("real?")
+class IsReal(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        return bools[isinstance(operand, Number)]

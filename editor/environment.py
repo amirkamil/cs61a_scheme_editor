@@ -65,11 +65,20 @@ def build_global_frame():
     # frame.assign(Symbol("#t"), SingletonTrue)
     # frame.assign(Symbol("#f"), SingletonFalse)
 
-    for name in ["acos", "acosh", "asin", "asinh", "atan", "atanh",
-                 "ceil", "copysign", "cos", "cosh", "degrees", "floor", "log",
-                 "log10", "log1p", "log2", "radians", "sin", "sinh", "sqrt",
-                 "tan", "tanh", "trunc"]:
+    for name in ["acos", "asin", "atan", "cos", "floor", "log",
+                 "sin", "sqrt", "tan",
+                 # EECS 390 removals
+                 # "acosh", "asinh", "atanh", "copysign", "ceil",
+                 # "cosh", "degrees", "log10", "log1p", "log2",
+                 # "radians", "sinh", "tanh",
+                 # EECS 390 additions
+                 "exp", "gcd", "lcm",
+                 ]:
         frame.assign(Symbol(name), MathProcedure(getattr(math, name), name))
+
+    # EECS 390 additions
+    for name, target in [("ceiling", "ceil"), ("truncate", "trunc")]:
+        frame.assign(Symbol(name), MathProcedure(getattr(math, target), name))
 
     with open("editor/builtins.scm") as file:
         execution.string_exec([" ".join(file.readlines())], lambda *x, **y: None, False, frame)
