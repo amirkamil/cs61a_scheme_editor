@@ -10,6 +10,7 @@ from execution_parser import get_expression
 from helper import pair_to_list, verify_exact_callable_length, verify_min_callable_length, \
     make_list, dotted_pair_to_list
 from lexer import TokenBuffer
+from lists import Memv
 from log import Holder, VisualExpression, return_symbol, logger
 from scheme_exceptions import OperandDeduceError, IrreversibleOperationError, LoadError, SchemeError, TypeMismatchError, \
     CallableResolutionError
@@ -275,6 +276,10 @@ class Cond(Callable):
             eval_condition = SingletonTrue
             if not isinstance(expanded[0], Symbol) or expanded[0].value != "else":
                 eval_condition = evaluate(expanded[0], frame, cond_holder.expression.children[0])
+            elif cond_i != len(operands) - 1:
+                raise OperandDeduceError(f"Else clause can only be the last clause of cond.")
+            elif len(expanded) < 2:
+                raise OperandDeduceError(f"Else clause needs to have an expression.")
             if (isinstance(expanded[0], Symbol) and expanded[0].value == "else") \
                     or eval_condition is not SingletonFalse:
                 out = eval_condition
@@ -554,3 +559,32 @@ class Error(Applicable):
 class LetStar(Callable):
     def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder):
         return _let_impl(self, "let*", operands, frame, gui_holder, True)
+
+
+@special_form("case")
+class Case(Callable):
+    def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder):
+        verify_min_callable_length(self, 2, len(operands))
+        key = evaluate(operands[0], frame, gui_holder.expression.children[1])
+        for case_i, case in enumerate(operands[1:]):
+            if not isinstance(case, Pair):
+                raise OperandDeduceError(f"Unable to evaluate clause of case, as {case} is not a Pair.")
+            expanded = pair_to_list(case)
+            case_holder = gui_holder.expression.children[case_i + 2]  # skip key
+            eval_condition = SingletonTrue
+            if (not isinstance(expanded[0], Symbol) or expanded[0].value != "else") \
+                   and isinstance(expanded[0], Pair):
+                eval_condition = Memv().execute_evaluated([key, expanded[0]], frame)
+            elif not isinstance(expanded[0], Symbol) or expanded[0].value != "else":
+                raise OperandDeduceError(f"Case clause expected list, received {expanded[0]}")
+            elif case_i != len(operands) - 2:  # exclude key from count
+                raise OperandDeduceError(f"Else clause can only be the last clause of case.")
+            if len(expanded) < 2:
+                raise OperandDeduceError(f"Case clause needs to have a length of at least two, received {case}.")
+            if (isinstance(expanded[0], Symbol) and expanded[0].value == "else") \
+                    or eval_condition is not SingletonFalse:
+                out = eval_condition
+                for i, expr in enumerate(expanded[1:]):
+                    out = evaluate(expr, frame, case_holder.expression.children[i + 1], i == len(expanded) - 2)
+                return out
+        return Undefined

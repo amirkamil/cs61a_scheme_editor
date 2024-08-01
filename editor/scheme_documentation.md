@@ -337,8 +337,8 @@ Each `clause` may be of the following form:
 
     (<test> [expression] ...)
 
-The last `clause` may instead be of the form `(else [expression] ...)`, which
-is equivalent to `(#t [expression] ...)`.
+The last `clause` may instead be of the form `(else <expression>
+...)`, which is equivalent to `(#t <expression> ...)`.
 
 Starts with the first `clause`. Evaluates `test`. If true, evaluate
 the `expression`s in order, returning the result of the last one. If
