@@ -244,16 +244,18 @@ class Eval(Applicable):
 @global_attr("apply")
 class Apply(Applicable):
     def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder, eval_operands=True):
-        verify_exact_callable_length(self, 2, len(operands))
+        verify_min_callable_length(self, 2, len(operands))
         if eval_operands:
             operands = evaluate_all(operands, frame, gui_holder.expression.children[1:])
-        func, args = operands
+        func, args_mid, last_arg = operands[0], operands[1:-1], operands[-1]
         if not isinstance(func, Applicable):
             raise OperandDeduceError(f"Unable to apply {func}.")
-        gui_holder.expression.set_entries([VisualExpression(Pair(func, args), gui_holder.expression.display_value)])
+        if not isinstance(last_arg, Pair) and last_arg is not Nil:
+            raise OperandDeduceError(f"Expected last argument of apply to be a list, not {last_arg}.")
+        args = args_mid + pair_to_list(last_arg)
+        gui_holder.expression.set_entries([VisualExpression(Pair(func, make_list(args)), gui_holder.expression.display_value)])
         gui_holder.expression.children[0].expression.children = []
         gui_holder.apply()
-        args = pair_to_list(args)
         return func.execute(args, frame, gui_holder.expression.children[0], False)
 
 
