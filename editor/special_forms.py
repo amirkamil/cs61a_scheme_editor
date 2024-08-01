@@ -119,6 +119,7 @@ class ProcedureBuilder(Callable):
         if not logger.dotted and not isinstance(params, (Pair, NilType)):
             raise OperandDeduceError(f"Expected Pair as parameter list, received {params}.")
         params, var_param = dotted_pair_to_list(params)
+        param_set = set()
         for i, param in enumerate(params):
             if (logger.dotted or i != len(params) - 1) and not isinstance(param, Symbol):
                 raise OperandDeduceError(f"Expected Symbol in parameter list, received {param}.")
@@ -130,8 +131,11 @@ class ProcedureBuilder(Callable):
                         param_vals[0].value != "variadic":
                     raise OperandDeduceError(f"Each member of a parameter list must be a Symbol or a variadic "
                                              f"parameter, not {param}.")
-                var_param = param_vals[1]
+                param = var_param = param_vals[1]
                 params.pop()
+            if param.value in param_set:
+                raise OperandDeduceError(f"Duplicate name in parameter list: {param}.")
+            param_set.add(param.value)
 
         return self.procedure(params, var_param, operands[1:], frame, name)
 
@@ -301,40 +305,52 @@ class Or(Callable):
         return SingletonFalse
 
 
+def _let_impl(receiver, kind, operands, frame, gui_holder, nest_frames=False):
+    verify_min_callable_length(receiver, 2, len(operands))
+
+    bindings = operands[0]
+    if not isinstance(bindings, Pair) and bindings is not Nil:
+        raise OperandDeduceError(f"Expected first argument of {kind} to be a Pair, not {bindings}.")
+
+    old_frame = frame
+    new_frame = Frame(f"anonymous {kind}", old_frame)
+
+    bindings_holder = gui_holder.expression.children[1]
+
+    bindings = pair_to_list(bindings)
+    name_set = set()
+
+    for i, binding in enumerate(bindings):
+        if not isinstance(binding, Pair):
+            raise OperandDeduceError(f"Expected binding to be a Pair, not {binding}.")
+        binding_holder = bindings_holder.expression.children[i]
+        binding = pair_to_list(binding)
+        if len(binding) != 2:
+            raise OperandDeduceError(f"Expected binding to be of length 2, not {len(binding)}.")
+        name, expr = binding
+        if not isinstance(name, Symbol):
+            raise OperandDeduceError(f"Expected first element of binding to be a Symbol, not {name}.")
+        if name.value in name_set:
+            raise OperandDeduceError(f"Duplicate binding name in {kind}: {name}.")
+        name_set.add(name.value)
+        new_frame.assign(name, evaluate(expr, old_frame, binding_holder.expression.children[1]))
+        if nest_frames and i < len(bindings) - 1:
+            old_frame = new_frame
+            new_frame = Frame(f"anonymous {kind}", old_frame)
+
+    value = None
+
+    for i, (operand, holder) in enumerate(zip(operands[1:], gui_holder.expression.children[2:])):
+        value = evaluate(operand, new_frame, holder, i == len(operands) - 2)
+
+    new_frame.assign(return_symbol, value)
+    return value
+
+
 @special_form("let")
 class Let(Callable):
     def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder):
-        verify_min_callable_length(self, 2, len(operands))
-
-        bindings = operands[0]
-        if not isinstance(bindings, Pair) and bindings is not Nil:
-            raise OperandDeduceError(f"Expected first argument of let to be a Pair, not {bindings}.")
-
-        new_frame = Frame("anonymous let", frame)
-
-        bindings_holder = gui_holder.expression.children[1]
-
-        bindings = pair_to_list(bindings)
-
-        for i, binding in enumerate(bindings):
-            if not isinstance(binding, Pair):
-                raise OperandDeduceError(f"Expected binding to be a Pair, not {binding}.")
-            binding_holder = bindings_holder.expression.children[i]
-            binding = pair_to_list(binding)
-            if len(binding) != 2:
-                raise OperandDeduceError(f"Expected binding to be of length 2, not {len(binding)}.")
-            name, expr = binding
-            if not isinstance(name, Symbol):
-                raise OperandDeduceError(f"Expected first element of binding to be a Symbol, not {name}.")
-            new_frame.assign(name, evaluate(expr, frame, binding_holder.expression.children[1]))
-
-        value = None
-
-        for i, (operand, holder) in enumerate(zip(operands[1:], gui_holder.expression.children[2:])):
-            value = evaluate(operand, new_frame, holder, i == len(operands) - 2)
-
-        new_frame.assign(return_symbol, value)
-        return value
+        return _let_impl(self, "let", operands, frame, gui_holder, False)
 
 
 @special_form("variadic")
@@ -530,3 +546,11 @@ class Error(Applicable):
         if eval_operands:
             operands = evaluate_all(operands, frame, gui_holder.expression.children[1:])
         raise SchemeError(operands[0])
+
+
+# EECS 390 additions
+
+@special_form("let*")
+class LetStar(Callable):
+    def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder):
+        return _let_impl(self, "let*", operands, frame, gui_holder, True)
