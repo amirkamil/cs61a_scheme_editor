@@ -1,22 +1,3 @@
-; EECS 390 tweaks
-(define (<map-one> func lst)
-  (if (null? lst)
-      '()
-      (cons (func (car lst))
-            (<map-one> func (cdr lst))
-      )
-  )
-)
-
-(define (map func list1 . rest)
-  (if (null? list1)
-      '()
-      (cons (apply func (<map-one> car (cons list1 rest)))
-            (apply map func (<map-one> cdr (cons list1 rest)))
-      )
-  )
-)
-
 ; EECS 390 removals
 ; (define (filter func lst)
 ;   (cond ((null? lst) nil)
@@ -39,9 +20,9 @@
 ;          ))
 ;   )
 ; )
-
-(define (cdr-stream stream)
-  (force (cdr stream)))
+;
+; (define (cdr-stream stream)
+;   (force (cdr stream)))
 
 ; EECS 390 additions
 

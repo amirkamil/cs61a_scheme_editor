@@ -5,8 +5,8 @@ import log
 import arithmetic
 from datamodel import Expression, Pair, Nil, Number, bools, Undefined, NilType, Promise, SingletonTrue
 from environment import global_attr
-from evaluate_apply import Frame
-from helper import pair_to_list, make_list, verify_exact_callable_length
+from evaluate_apply import Frame, Callable, Applicable, evaluate_all
+from helper import pair_to_list, make_list, verify_exact_callable_length, verify_min_callable_length
 from primitives import SingleOperandPrimitive, BuiltIn
 from scheme_exceptions import OperandDeduceError, IrreversibleOperationError
 
@@ -61,23 +61,29 @@ class Length(SingleOperandPrimitive):
         return Number(len(pair_to_list(operand)))
 
 
-# @global_attr("map")
-# class Map(BuiltIn):
-#     def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
-#         verify_exact_callable_length(self, 2, len(operands))
-#
-#         func, lst = operands
-#
-#         if not isinstance(func, Callable):
-#             raise OperandDeduceError(f"Unable to call {operands[0]}.")
-#
-#         if not isinstance(lst, Pair):
-#             raise OperandDeduceError(f"Unable to iterate, since {operands[1]} is not a valid list.")
-#
-#         lst = pair_to_list(lst)
-#         out = [func.execute([x], frame, dummy_holder) for x in lst]
-#
-#         return make_list(out)
+@global_attr("map")
+class Map(Applicable):
+    def execute(self, operands: List[Expression], frame: Frame, gui_holder: log.Holder, eval_operands=True) -> Expression:
+        verify_min_callable_length(self, 2, len(operands))
+        if eval_operands:
+            operands = evaluate_all(operands, frame, gui_holder.expression.children[1:])
+        func, lists = operands[0], operands[1:]
+        if not isinstance(func, Callable):
+            raise OperandDeduceError(f"Unable to call {operands[0]}.")
+        for i, lst in enumerate(lists):
+            if not isinstance(lst, Pair) and lst is not Nil:
+                raise OperandDeduceError(f"Unable to iterate, since {operands[1]} is not a valid list.")
+            lists[i] = pair_to_list(lst)
+            if len(lists[i]) != len(lists[0]):
+                raise OperandDeduceError("List arguments to map must all have "
+                                         "the same length, but length of "
+                                         f"{operands[i+1]} is not the same as "
+                                         f"that of {operands[1]}.")
+        gui_holder.expression.set_entries([])
+        gui_holder.apply()
+        arg_tuples = zip(*lists)
+        out = [func.execute(list(x), frame, gui_holder, False) for x in arg_tuples]
+        return make_list(out)
 
 
 @global_attr("list")

@@ -1,3 +1,4 @@
 (autodraw)
 
-(gcd -32 36)
+(display (gcd -32 36))
+(newline)
