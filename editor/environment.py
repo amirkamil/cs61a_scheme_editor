@@ -67,10 +67,6 @@ def build_global_frame():
 
     for name in ["acos", "asin", "atan", "cos", "floor", "log",
                  "sin", "sqrt", "tan",
-                 # EECS 390 removals
-                 # "acosh", "asinh", "atanh", "copysign", "ceil",
-                 # "cosh", "degrees", "log10", "log1p", "log2",
-                 # "radians", "sinh", "tanh",
                  # EECS 390 additions
                  "exp", "gcd", "lcm",
                  ]:

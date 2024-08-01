@@ -125,28 +125,27 @@ individual characters.
 ### Pairs and Lists
 
 Pairs are a built-in data structure consisting of two fields, a `car` and a
-`cdr` (also sometimes called first and second, or first and rest). The first
-value can contain any scheme datatype. However, the second value must contain
-nil, a pair, or a stream promise.
+`cdr` (also sometimes called first and second, or first and rest).
 
 `nil` is a special value in Scheme that represents the empty list. It can be
 inputted by typing `nil` or `()` into the interpreter.
 
-A **list** is defined as either `nil` or a pair whose `cdr` is another list.
-Pairs are displayed as a parenthesized, space separated, sequence of the elements
-in the sequence they represent. For example, `(cons (cons 1 nil) (cons 2 nil))`
-is displayed as `((1) 2)`. This means that `cons` is asymmetric.
+A **list** (or **proper list**) is defined as either `nil` or a pair
+whose `cdr` is another list. Lists are displayed as a parenthesized,
+space separated, sequence of the elements in the sequence they
+represent. For example, `(cons (cons 1 nil) (cons 2 nil))` is
+displayed as `((1) 2)`. This means that `cons` is asymmetric.
 
-> There is one exception to the above rule in the case of streams. Streams are
-> represented as the `car` of the stream, followed by a dot, followed by the
-> promise that makes up its cdr. For example
-```scheme
-scm> (cons-stream 1 nil)
-(1 . #[promise (not forced)])
-```
+An **improper list** is a sequence of pairs that is not terminated by
+`nil`. An improper list is displayed similarly to a proper list,
+except that the final element is preceded by a dot. For example,
+`(cons 1 (cons 2 3))` is displayed as `(1 2 . 3)`.
 
-List literals can be constructed through the quote special form, so
-`(cons 1 (cons 'a nil))` and `'(1 a)` are equivalent.
+List and improper-list literals can be constructed through the quote
+special form, so `(cons 1 (cons 'a nil))` and `'(1 a)` are equivalent.
+The built-in `list` procedure also constructs a proper list, taking
+any number of arguments. For example, `(list 1 'a -7)` results in the
+list `(1 a -7)`.
 
 ### Procedures
 
@@ -192,18 +191,15 @@ Macros effectively let the user define new special forms. Macro procedures take
 in unevaluated operand expressions and should generally return a piece of Scheme
 code that the macro is equivalent to.
 
-### Promises and Streams
+### Promises
 
 Promises represent the delayed evaluation of an expression in an environment.
 They can be constructed by passing an expression into the `delay` special form.
 The evaluation of a promise can be forced by passing it into the `force`
 built-in. The expression of a promise will only ever be evaluated once. The
 first call of `force` will store the result, which will be immediately returned
-on subsequent calls of `force` on the same promise.
-
-A promise must contain a pair or nil since it is used as the `cdr` of a stream. If
-it is found to contain something else when forced, `force` will error. If `force`
-errors for any reason, the promise remains unforced.
+on subsequent calls of `force` on the same promise. If `force` errors
+for any reason, the promise remains unforced.
 
 For example
 
@@ -238,13 +234,6 @@ scm> (force p)
 hi
 Error
 ```
-
-Promises are used to define **streams**, which are to lists what promises are to
-regular values. A stream is defined as a pair where the cdr is a promise that
-evaluates to another stream or `nil`. The `cons-stream` special form and the
-`cdr-stream` built-in are provided make the construction and manipulation of
-streams easier. `(cons-stream a b)` is equivalent to `(cons a (delay b))`
-while `(cdr-stream x)` is equivalent to `(force (cdr x))`.
 
 > A note for those familiar with promises in languages like JavaScript: although
 Scheme promises and JS-style promises originate from the
@@ -422,12 +411,6 @@ Returns the literal `expression` without evaluating it.
 
 Returns a promise of `expression` to be evaluated in the current environment.
 
-### **`cons-stream`**
-
-    (cons-stream <first> <rest>)
-
-Shorthand for `(cons <first> (delay <rest>))`.
-
 ### **`set!`**
 
     (set! <name> <expression>)
@@ -487,13 +470,15 @@ Macro procedures should be lexically scoped, like lambda procedures.
 <a class='builtin-header' id='apply'>**`apply`**</a>
 
 ```scheme
-(apply <procedure> <args>)
+(apply <procedure> [arg1] ... <args>)
 ```
 
-Calls `procedure` with the given list of `args`.
+Calls `procedure` with the given set of arguments. `args` must be list.
 
 ```scheme
 scm> (apply + '(1 2 3))
+6
+scm> (apply + 1 2 '(3))
 6
 ```
 
@@ -610,14 +595,14 @@ Returns true if `arg` is a integer; false otherwise.
 (list? <arg>)
 ```
 
-Returns true if `arg` is a well-formed list (i.e., it doesn't contain
-a stream); false otherwise. If the list has a cycle, this may cause an
-error or infinite loop.
+Returns true if `arg` is a proper list (i.e., is nil or a sequence of
+pairs terminated by nil); false otherwise. If the list has a cycle,
+this may cause an error or infinite loop.
 
 ```scheme
 scm> (list? '(1 2 3))
 #t
-scm> (list? (cons-stream 1 nil))
+scm> (list? '(1 2 . 3))
 #f
 ```
 
@@ -661,6 +646,14 @@ Returns true if `arg` is a procedure; false otherwise.
 
 Returns true if `arg` is a promise; false otherwise.
 
+<a class='builtin-header' id=real?'>**`real?`**</a>
+
+```scheme
+(real? <arg>)
+```
+
+Returns true if `arg` is a number; false otherwise.
+
 <a class='builtin-header' id='string?'>**`string?`**</a>
 
 ```scheme
@@ -686,7 +679,8 @@ Returns true if `arg` is a symbol; false otherwise.
 ```
 
 Returns the result of appending the items of all `lst`s in order into a single
-list. Returns `nil` if no `lst`s.
+list. Returns `nil` if no `lst`s. The last argument can be any value, but
+the preceding arguments must be proper lists.
 
 ```scheme
 scm> (append '(1 2 3) '(4 5 6))
@@ -696,8 +690,45 @@ scm> (append)
 scm> (append '(1 2 3) '(a b c) '(foo bar baz))
 (1 2 3 a b c foo bar baz)
 scm> (append '(1 2 3) 4)
+(1 2 3 . 4)
+scm> (append 4 '(1 2 3))
 Error
 ```
+
+<a class='builtin-header' id='assoc'>**`assoc`**</a>
+
+```scheme
+(assoc <item> <lst>)
+```
+
+Returns the result of searching `lst` for the first pair whose `car`
+is equivalent to `item` according to the `equal?` procedure. `lst`
+must be a list of pairs. If no matching pair is found, returns `#f`.
+
+```scheme
+scm> (assoc 'a '((b 3) (a 4) (c 2) (a -1)))
+(a 4)
+scm> (assoc 'd '((b 3) (a 4) (c 2) (a -1)))
+#f
+```
+
+<a class='builtin-header' id='assq'>**`assq`**</a>
+
+```scheme
+(assq <item> <lst>)
+```
+
+Similar to `assoc`, except that `assq` uses `eq?` to compare items
+rather than `equal?`.
+
+<a class='builtin-header' id='assv'>**`assv`**</a>
+
+```scheme
+(assv <item> <lst>)
+```
+
+Similar to `assoc`, except that `assv` uses `eqv?` to compare items
+rather than `equal?`.
 
 <a class='builtin-header' id='car'>**`car`**</a>
 
@@ -714,6 +745,11 @@ Returns the `car` of `pair`. Errors if `pair` is not a pair.
 ```
 
 Returns the `cdr` of `pair`. Errors if `pair` is not a pair.
+
+The interpreter also provides compositions of `car` and `cdr` up to
+four levels deep. For instance, `(cadr <pair>)` is equivalent to `(car
+(cdr <pair>))`, and `(cadadr <pair>)` is equivalent to `(car (cdr (car
+(cdr <pair>))))`.
 
 <a class='builtin-header' id='cons'>**`cons`**</a>
 
@@ -743,33 +779,71 @@ Returns a list with the `item`s in order as its elements.
 <a class='builtin-header' id='map'>**`map`**</a>
 
 ```scheme
-(map <proc> <lst>)
+(map <proc> <lsts> ...)
 ```
 
-Returns a list constructed by calling `proc` (a one-argument
-procedure) on each item in `lst`.
-
-<a class='builtin-header' id='filter'>**`filter`**</a>
+Returns a list constructed by calling `proc` on the respective items
+at the same position in the given lists. `proc` must take as many
+arguments as there are lists. If more than one list is given, they
+must all have the same length.
 
 ```scheme
-(filter <pred> <lst>)
+scm> (map car '((a b) (c d) (e f)))
+(a c e)
+scm> (map + '(1 2 3) '(4 5 6))
+(5 7 9)
 ```
 
-Returns a list consisting of only the elements of `lst` that
-return true when called on `pred` (a one-argument
-procedure).
-
-<a class='builtin-header' id='reduce'>**`reduce`**</a>
+<a class='builtin-header' id='member'>**`member`**</a>
 
 ```scheme
-(reduce <combiner> <lst>)
+(member <item> <lst>)
 ```
 
-Returns the result of sequentially combining each element in `lst`
-using `combiner` (a two-argument procedure). `reduce` works
-from left-to-right, with the existing combined value passed as the first
-argument and the new value as the second argument. `lst` must contain at least
-one item.
+Returns the first sublist of `lst` whose `car` is equivalent to `item`
+according to the `equal?` procedure. `lst` must be a proper list. If
+no matching element is found, returns `#f`.
+
+```scheme
+scm> (member 'a '(c a b a))
+(a b a)
+scm> (member 'd '(c a b a))
+#f
+```
+
+<a class='builtin-header' id='memq'>**`memq`**</a>
+
+```scheme
+(memq <item> <lst>)
+```
+
+Similar to `member`, except that `memq` uses `eq?` to compare items
+rather than `equal?`.
+
+<a class='builtin-header' id='memv'>**`memv`**</a>
+
+```scheme
+(memv <item> <lst>)
+```
+
+Similar to `member`, except that `memv` uses `eqv?` to compare items
+rather than `equal?`.
+
+<a class='builtin-header' id='reverse'>**`reverse`**</a>
+
+```scheme
+(reverse <lst>)
+```
+
+Returns a new list consisting of the elements in `lst` in reverse
+order. `lst` must be a proper list.
+
+```scheme
+scm> (reverse '(1 2 3))
+(3 2 1)
+scm> (reverse '(1 2 . 3))
+Error
+```
 
 ### Mutation
 
@@ -854,6 +928,22 @@ Returns the absolute value of `num`, which must be a number.
 
 Returns the `base` raised to the `power` power. Both must be numbers.
 
+<a class='builtin-header' id='max'>**`max`**</a>
+
+```scheme
+(max <num> ...)
+```
+
+Returns the maximum of the given arguments, which must be numbers.
+
+<a class='builtin-header' id='min'>**`min`**</a>
+
+```scheme
+(min <num> ...)
+```
+
+Returns the minimum of the given arguments, which must be numbers.
+
 <a class='builtin-header' id='modulo'>**`modulo`**</a>
 
 ```scheme
@@ -899,36 +989,46 @@ scm> (remainder -7 3)
 -1
 ```
 
+<a class='builtin-header' id='round'>**`round`**</a>
+
+```scheme
+(round <num>)
+```
+
+Returns the closest integer to `num`, which must be a number. If `num` is
+halfway between two integers, returns the even one.
+
+```scheme
+scm> (round -5.3)
+-5
+scm> (round 3.5)
+4
+scm> (round 4.5)
+4
+```
+
 ### Additional Math Procedures
 
 The Python-based interpreter adds the following additional procedures whose
 behavior exactly match the corresponding Python functions in the
 [math module](https://docs.python.org/3/library/math.html).
 
-- acos
-- acosh
-- asin
-- asinh
-- atan
-- atan2
-- atanh
-- ceil
-- copysign
-- cos
-- cosh
-- degrees
-- floor
-- log
-- log10
-- log1p
-- log2
-- radians
-- sin
-- sinh
-- sqrt
-- tan
-- tanh
-- trunc
+- `acos`
+- `asin`
+- `atan`
+- `cos`
+- `exp`
+- `floor`
+- `gcd`
+- `lcm`
+- `log`
+- `sin`
+- `sqrt`
+- `tan`
+
+In addition, the interpreter implements the `ceiling` and `truncate`
+procedures to match the behavior of Python's `ceil` and `trunc`
+functions.
 
 ## Boolean Operations
 
@@ -1051,6 +1151,14 @@ Returns true if `a` is greater than or equal to `b`. Both must be numbers.
 
 Returns true if `num` is even. `num` must be a number.
 
+<a class='builtin-header' id='negative?'>**`negative?`**</a>
+
+```scheme
+(negative? <num>)
+```
+
+Returns true if `num` is negative. `num` must be a number.
+
 <a class='builtin-header' id='odd?'>**`odd?`**</a>
 
 ```scheme
@@ -1058,6 +1166,14 @@ Returns true if `num` is even. `num` must be a number.
 ```
 
 Returns true if `num` is odd. `num` must be a number.
+
+<a class='builtin-header' id='positive?'>**`positive?`**</a>
+
+```scheme
+(positive? <num>)
+```
+
+Returns true if `num` is positive. `num` must be a number.
 
 <a class='builtin-header' id='zero?'>**`zero?`**</a>
 
@@ -1067,7 +1183,7 @@ Returns true if `num` is odd. `num` must be a number.
 
 Returns true if `num` is zero. `num` must be a number.
 
-## Promises and Streams
+## Promises
 
 <a class='builtin-header' id='force'>**`force`**</a>
 
@@ -1078,14 +1194,6 @@ Returns true if `num` is zero. `num` must be a number.
 Returns the evaluated result of `promise`. If `promise` has already been
 forced, its expression will not be evaluated again. Instead, the result from
 the previous evaluation will be returned. `promise` must be a promise.
-
-<a class='builtin-header' id='cdr-stream'>**`cdr-stream`**</a>
-
-```scheme
-(cdr-stream <stream>)
-```
-
-Shorthand for `(force (cdr <stream>))`.
 
 ## Turtle Graphics
 

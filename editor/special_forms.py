@@ -510,14 +510,6 @@ class Force(Applicable):
         return operand.expr
 
 
-@special_form("cons-stream")
-class ConsStream(Callable):
-    def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder):
-        verify_exact_callable_length(self, 2, len(operands))
-        operands[0] = evaluate(operands[0], frame, gui_holder.expression.children[1])
-        return Pair(operands[0], Promise(operands[1], frame))
-
-
 @special_form("expect")
 class Expect(Callable):
     def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder):

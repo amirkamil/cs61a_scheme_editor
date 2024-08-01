@@ -143,9 +143,10 @@ class Memq(BuiltIn):
         value, sequence = operands
         if not isinstance(sequence, Pair) and sequence is not Nil:
             raise OperandDeduceError(f"memq expected a list as the second argument, received {sequence}.")
-        for item in pair_to_list(sequence):
-            if arithmetic.IsEq().execute_evaluated([value, item], frame) is SingletonTrue:
-                return item
+        while sequence is not Nil:
+            if arithmetic.IsEq().execute_evaluated([value, sequence.first], frame) is SingletonTrue:
+                return sequence
+            sequence = sequence.rest
         return bools[0]
 
 
@@ -156,9 +157,10 @@ class Memv(BuiltIn):
         value, sequence = operands
         if not isinstance(sequence, Pair) and sequence is not Nil:
             raise OperandDeduceError(f"memv expected a list as the second argument, received {sequence}.")
-        for item in pair_to_list(sequence):
-            if arithmetic.IsEqv().execute_evaluated([value, item], frame) is SingletonTrue:
-                return item
+        while sequence is not Nil:
+            if arithmetic.IsEqv().execute_evaluated([value, sequence.first], frame) is SingletonTrue:
+                return sequence
+            sequence = sequence.rest
         return bools[0]
 
 
@@ -169,9 +171,10 @@ class Member(BuiltIn):
         value, sequence = operands
         if not isinstance(sequence, Pair) and sequence is not Nil:
             raise OperandDeduceError(f"member expected a list as the second argument, received {sequence}.")
-        for item in pair_to_list(sequence):
-            if arithmetic.IsEqual().execute_evaluated([value, item], frame) is SingletonTrue:
-                return item
+        while sequence is not Nil:
+            if arithmetic.IsEqual().execute_evaluated([value, sequence.first], frame) is SingletonTrue:
+                return sequence
+            sequence = sequence.rest
         return bools[0]
 
 

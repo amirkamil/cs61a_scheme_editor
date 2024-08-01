@@ -1,29 +1,3 @@
-; EECS 390 removals
-; (define (filter func lst)
-;   (cond ((null? lst) nil)
-;         ((func (car lst))
-;          (cons (car lst)
-;                (filter func (cdr lst))
-;          ))
-;         (else (filter func (cdr lst)))
-;   )
-; )
-;
-; (define (reduce func lst)
-;   (cond ((null? lst) nil)
-;         ((null? (cdr lst)) (car lst))
-;         (else
-;          (reduce func
-;                  (cons (func (car lst) (car (cdr lst)))
-;                        (cdr (cdr lst))
-;                  )
-;          ))
-;   )
-; )
-;
-; (define (cdr-stream stream)
-;   (force (cdr stream)))
-
 ; EECS 390 additions
 
 ; syntax
