@@ -136,6 +136,37 @@ class Reverse(SingleOperandPrimitive):
         return out
 
 
+@global_attr("list-tail")
+class ListTail(BuiltIn):
+    def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
+        verify_exact_callable_length(self, 2, len(operands))
+        sequence, index = operands
+        if not isinstance(sequence, Pair) and sequence is not Nil:
+            raise OperandDeduceError(f"list-tail expected a list as the first argument, received {sequence}.")
+        if not isinstance(index, Number) or not isinstance(index.value, int) or index.value < 0:
+            raise OperandDeduceError(f"list-tail expected a non-negative integer as the second argument, received {index}.")
+        original = sequence
+        for _ in range(index.value):
+            if sequence is Nil:
+                raise OperandDeduceError(f"list-tail received the index {index}, but "
+                                         f"the given list has fewer than {index} "
+                                         f"elements: {original}.")
+            sequence = sequence.rest
+        return sequence
+
+
+@global_attr("list-ref")
+class ListRef(BuiltIn):
+    def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
+        verify_exact_callable_length(self, 2, len(operands))
+        sequence = ListTail().execute_evaluated(operands, frame)
+        if not isinstance(sequence, Pair):
+            raise OperandDeduceError(f"list-ref received the index {operands[1]}, but "
+                                     f"the given list has fewer than {operands[1].value+1} "
+                                     f"elements: {operands[0]}.")
+        return sequence.first
+
+
 @global_attr("memq")
 class Memq(BuiltIn):
     def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:

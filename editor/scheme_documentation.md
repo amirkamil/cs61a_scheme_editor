@@ -822,6 +822,26 @@ will cause an error.
 
 Returns a list with the `item`s in order as its elements.
 
+<a class='builtin-header' id='list-tail'>**`list-tail`**</a>
+
+```scheme
+(list-tail <lst> <num>)
+```
+
+Return the sublist of `lst` that excludes the first `num` elements.
+`num` must be an integer greater than or equal to zero, and less than
+or equal to the length of the list.
+
+<a class='builtin-header' id='list-ref'>**`list-ref`**</a>
+
+```scheme
+(list-ref <lst> <num>)
+```
+
+Return the element at index `num` in `lst`, with indices starting at
+zero. `num` must be an integer greater than or equal to zero, and
+strictly less than the length of the list.
+
 <a class='builtin-header' id='map'>**`map`**</a>
 
 ```scheme
