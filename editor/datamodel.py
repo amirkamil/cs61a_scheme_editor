@@ -1,7 +1,7 @@
 from typing import TYPE_CHECKING
 
 from log_utils import get_id
-from scheme_exceptions import TypeMismatchError
+from scheme_exceptions import TypeMismatchError, ParseError
 
 if TYPE_CHECKING:
     from evaluate_apply import Frame
@@ -86,9 +86,6 @@ class Boolean(ValueHolder):
 
 
 class String(ValueHolder):
-    def __init__(self, value):
-        super().__init__(value)
-
     def __repr__(self):
         return "\"" + self.value.replace("\n", "\\n").replace("\"", "\\\"").replace("\'", "'") + "\""
 
@@ -131,3 +128,34 @@ bools = [SingletonFalse, SingletonTrue]
 
 Nil = NilType()
 Undefined = UndefinedType()
+
+
+# EECS 390 additions
+
+class Character(ValueHolder):
+    def __init__(self, value):
+        if value.lower() == "#\\space":
+            value = " "
+        elif value.lower() == "#\\newline":
+            value = "\n"
+        elif len(value) != 3 or value[1] != "\\":
+            raise ParseError(f"Unexpected token: '{value}'")
+        else:
+            value = value[-1]
+        super().__init__(value)
+
+    def __repr__(self):
+        if self.value == " ":
+            return "#\\space"
+        if self.value == "\n":
+            return "#\\newline"
+        return f"#\\{self.value}"
+
+
+class Vector(Expression):
+    def __init__(self, value):
+        super().__init__()
+        self.value = value
+
+    def __repr__(self):
+        return f"#({' '.join(repr(item) for item in self.value)})"

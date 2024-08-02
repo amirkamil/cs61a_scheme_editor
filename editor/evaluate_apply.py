@@ -1,7 +1,7 @@
 from typing import Dict, List, Union, Optional
 
 import log
-from datamodel import Symbol, Expression, Number, Pair, Nil, Undefined, Boolean, String, Promise
+from datamodel import Symbol, Expression, Number, Pair, Nil, Undefined, Boolean, String, Promise, Character
 from helper import pair_to_list
 from scheme_exceptions import SymbolLookupError, CallableResolutionError, IrreversibleOperationError, OutOfMemoryError
 
@@ -95,7 +95,8 @@ def evaluate(expr: Expression, frame: Frame, gui_holder: log.Holder,
                 or isinstance(expr, Callable) \
                 or isinstance(expr, Boolean) \
                 or isinstance(expr, String) \
-                or isinstance(expr, Promise):
+                or isinstance(expr, Promise) \
+                or isinstance(expr, Character):
             ret = expr
         elif isinstance(expr, Symbol):
             gui_holder.evaluate()
