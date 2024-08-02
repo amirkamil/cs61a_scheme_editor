@@ -359,6 +359,8 @@ class Heap:
                 return False, "nil"
             elif isinstance(expr, UndefinedType):
                 return False, "undefined"
+            elif isinstance(expr, Vector):
+                val = [self.record(item) for item in expr.value]
             else:
                 # assume the repr method is good enough
                 val = [(False, repr(expr))]

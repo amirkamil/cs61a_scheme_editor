@@ -301,7 +301,7 @@ def start(file_args, port, open_browser):
         print(" - Ctrl+C pressed")
         print("Shutting down server - all unsaved work may be lost")
         print(
-'''
+r'''
       _____   _______    ____    _____  
      / ____| |__   __|  / __ \  |  __ \ 
     | (___      | |    | |  | | | |__) |
