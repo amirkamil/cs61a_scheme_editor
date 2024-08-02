@@ -13,7 +13,7 @@ from lexer import TokenBuffer
 from lists import Memv
 from log import Holder, VisualExpression, return_symbol, logger
 from scheme_exceptions import OperandDeduceError, IrreversibleOperationError, LoadError, SchemeError, TypeMismatchError, \
-    CallableResolutionError
+    CallableResolutionError, UnsupportedOperationError
 
 
 class ProcedureObject(Callable):
@@ -32,7 +32,7 @@ class ProcedureObject(Callable):
         self.var_param = var_param
         self.body = body
         self.frame = frame
-        self.name = name if name is not None else self.name
+        self.name = name if name is not None else f"[{self.name}]"
 
     def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder, eval_operands=True):
         new_frame = Frame(self.name, self.frame if self.lexically_scoped else frame)
@@ -80,14 +80,15 @@ class ProcedureObject(Callable):
     def __repr__(self):
         if self.var_param is not None:
             if logger.dotted:
-                varparams = ". " + self.var_param.value
+                varparams = " . " + self.var_param.value
             else:
-                varparams = "(variadic " + self.var_param.value + ")"
-            if self.params:
-                varparams = " " + varparams
+                varparams = " (variadic " + self.var_param.value + ")"
         else:
             varparams = ""
-        return f"({self.name} {' '.join(map(repr, self.params))}{varparams}) [parent = {self.frame.id}]"
+        params = " ".join(map(repr, self.params))
+        if self.params:
+            params = " " + params
+        return f"({self.name}{params}{varparams}) [parent = {self.frame.id}]"
 
     def __str__(self):
         return f"#[{self.name}]"
@@ -114,7 +115,7 @@ class MacroObject(ProcedureObject, Callable):
 class ProcedureBuilder(Callable):
     procedure: Type[ProcedureObject]
 
-    def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder, name: str = "lambda"):
+    def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder, name: str = None):
         verify_min_callable_length(self, 2, len(operands))
         params = operands[0]
         if not logger.dotted and not isinstance(params, (Pair, NilType)):
@@ -138,7 +139,8 @@ class ProcedureBuilder(Callable):
                 raise OperandDeduceError(f"Duplicate name in parameter list: {param}.")
             param_set.add(param.value)
 
-        return self.procedure(params, var_param, operands[1:], frame, name)
+        name_arg = (name,) if name else ()
+        return self.procedure(params, var_param, operands[1:], frame, *name_arg)
 
 
 @special_form("lambda")
@@ -588,3 +590,38 @@ class Case(Callable):
                     out = evaluate(expr, frame, case_holder.expression.children[i + 1], i == len(expanded) - 2)
                 return out
         return Undefined
+
+
+class UnsupportedSpecialForm(Callable):
+    def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder):
+        raise UnsupportedOperationError(self)
+
+
+@special_form("letrec")
+class Letrec(UnsupportedSpecialForm):
+    pass  # unimplemented
+
+
+@special_form("do")
+class Do(UnsupportedSpecialForm):
+    pass  # unimplemented
+
+
+@special_form("let-syntax")
+class LetSyntax(UnsupportedSpecialForm):
+    pass  # unimplemented
+
+
+@special_form("letrec-syntax")
+class LetrecSyntax(UnsupportedSpecialForm):
+    pass  # unimplemented
+
+
+@special_form("syntax-rules")
+class SyntaxRules(UnsupportedSpecialForm):
+    pass  # unimplemented
+
+
+@special_form("define-syntax")
+class DefineSyntax(UnsupportedSpecialForm):
+    pass  # unimplemented

@@ -5,7 +5,7 @@ from datamodel import Expression, Number, bools, SingletonFalse, ValueHolder, Pa
 from environment import global_attr
 from evaluate_apply import Frame
 from helper import assert_all_numbers, verify_exact_callable_length, verify_min_callable_length
-from primitives import BuiltIn, SingleOperandPrimitive
+from primitives import BuiltIn, SingleOperandPrimitive, UnsupportedBuiltIn, UnsupportedSingleOperandPrimitive
 
 
 @global_attr("+")
@@ -238,3 +238,38 @@ class IsNegative(SingleOperandPrimitive):
     def execute_simple(self, operand: Expression) -> Expression:
         assert_all_numbers([operand])
         return bools[operand.value < 0]
+
+
+@global_attr("rationalize")
+class Rationalize(UnsupportedBuiltIn):
+    pass  # unimplemented
+
+
+@global_attr("make-rectangular")
+class MakeRectangular(UnsupportedBuiltIn):
+    pass  # unimplemented
+
+
+@global_attr("make-polar")
+class MakePolar(UnsupportedBuiltIn):
+    pass  # unimplemented
+
+
+@global_attr("real-part")
+class RealPart(UnsupportedSingleOperandPrimitive):
+    pass  # unimplemented
+
+
+@global_attr("imag-part")
+class ImagPart(UnsupportedSingleOperandPrimitive):
+    pass  # unimplemented
+
+
+@global_attr("magnitude")
+class Magnitude(UnsupportedSingleOperandPrimitive):
+    pass  # unimplemented
+
+
+@global_attr("angle")
+class Angle(UnsupportedSingleOperandPrimitive):
+    pass  # unimplemented

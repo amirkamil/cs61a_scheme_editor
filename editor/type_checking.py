@@ -86,3 +86,15 @@ class IsSymbol(SingleOperandPrimitive):
 class IsReal(SingleOperandPrimitive):
     def execute_simple(self, operand: Expression) -> Expression:
         return bools[isinstance(operand, Number)]
+
+
+@global_attr("exact?")
+class IsExact(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        return bools[isinstance(operand, Number) and isinstance(operand.value, int)]
+
+
+@global_attr("inexact?")
+class IsInexact(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        return bools[isinstance(operand, Number) and not isinstance(operand.value, int)]

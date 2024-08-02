@@ -5,6 +5,7 @@ from log import Holder
 
 from datamodel import Expression
 from evaluate_apply import Frame, evaluate_all, Applicable
+from scheme_exceptions import UnsupportedOperationError
 
 
 class BuiltIn(Applicable):
@@ -29,8 +30,19 @@ class SingleOperandPrimitive(BuiltIn):
         raise NotImplementedError()
 
 
+class UnsupportedBuiltIn(BuiltIn):
+    def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
+        raise UnsupportedOperationError(self)
+
+
+class UnsupportedSingleOperandPrimitive(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        raise UnsupportedOperationError(self)
+
+
 def load_primitives():
     __import__("arithmetic")
+    __import__("conversions")
     __import__("lists")
     __import__("type_checking")
     __import__("console")
