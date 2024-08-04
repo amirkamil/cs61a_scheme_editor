@@ -42,6 +42,11 @@ def verify_min_callable_length(operator: Expression, expected: int, actual: int)
         raise CallableResolutionError(f"{operator} expected at least {expected} operands, received {actual}.")
 
 
+def verify_range_callable_length(operator: Expression, min_expected: int, max_expected: int, actual: int):
+    if not (min_expected <= actual <= max_expected):
+        raise CallableResolutionError(f"{operator} expected between {min_expected} and {max_expected} operands, received {actual}.")
+
+
 def make_list(exprs: List[Expression], last: Expression = Nil) -> Union[Pair, NilType]:
     out = last
     for expr in reversed(exprs):
