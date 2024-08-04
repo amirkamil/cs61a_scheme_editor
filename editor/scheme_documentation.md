@@ -1172,42 +1172,46 @@ Returns true if `arg` is false-y or false if `arg` is truthy.
 <a class='builtin-header' id='='>**`=`**</a>
 
 ```scheme
-(= <a> <b>)
+(= <num1> <num2> ...)
 ```
 
-Returns true if `a` equals `b`. Both must be numbers.
+Returns true if the given numbers are equal. All arguments must be numbers.
 
 <a class='builtin-header' id='<'>**`<`**</a>
 
 ```scheme
-(< <a> <b>)
+(< <num1> <num2> ...)
 ```
 
-Returns true if `a` is less than `b`. Both must be numbers.
+Returns true if the given numbers are monotonically increasing. All
+arguments must be numbers.
 
 <a class='builtin-header' id='>'>**`>`**</a>
 
 ```scheme
-(> <a> <b>)
+(> <num1> <num2> ...)
 ```
 
-Returns true if `a` is greater than `b`. Both must be numbers.
+Returns true if the given numbers are monotonically decreasing. All
+arguments must be numbers.
 
 <a class='builtin-header' id='<='>**`<=`**</a>
 
 ```scheme
-(<= <a> <b>)
+(<= <num1> <num2> ...)
 ```
 
-Returns true if `a` is less than or equal to `b`. Both must be numbers.
+Returns true if the given numbers are monotonically nondecreasing. All
+arguments must be numbers.
 
 <a class='builtin-header' id='>='>**`>=`**</a>
 
 ```scheme
-(>= <a> <b>)
+(>= <num1> <num2> ...)
 ```
 
-Returns true if `a` is greater than or equal to `b`. Both must be numbers.
+Returns true if the given numbers are monotonically nonincreasing. All
+arguments must be numbers.
 
 <a class='builtin-header' id='even?'>**`even?`**</a>
 

@@ -1,3 +1,4 @@
+import itertools
 import math
 from typing import List
 
@@ -95,41 +96,46 @@ class Remainder(BuiltIn):
 @global_attr("=")
 class NumEq(BuiltIn):
     def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
-        verify_exact_callable_length(self, 2, len(operands))
+        verify_min_callable_length(self, 2, len(operands))
         assert_all_numbers(operands)
-        return bools[operands[0].value == operands[1].value]
+        return bools[all(map(lambda pair: pair[0].value == pair[1].value,
+                             itertools.pairwise(operands)))]
 
 
 @global_attr("<")
 class Less(BuiltIn):
     def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
-        verify_exact_callable_length(self, 2, len(operands))
+        verify_min_callable_length(self, 2, len(operands))
         assert_all_numbers(operands)
-        return bools[operands[0].value < operands[1].value]
+        return bools[all(map(lambda pair: pair[0].value < pair[1].value,
+                             itertools.pairwise(operands)))]
 
 
 @global_attr("<=")
 class LessOrEq(BuiltIn):
     def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
-        verify_exact_callable_length(self, 2, len(operands))
+        verify_min_callable_length(self, 2, len(operands))
         assert_all_numbers(operands)
-        return bools[operands[0].value <= operands[1].value]
+        return bools[all(map(lambda pair: pair[0].value <= pair[1].value,
+                             itertools.pairwise(operands)))]
 
 
 @global_attr(">")
 class Greater(BuiltIn):
     def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
-        verify_exact_callable_length(self, 2, len(operands))
+        verify_min_callable_length(self, 2, len(operands))
         assert_all_numbers(operands)
-        return bools[operands[0].value > operands[1].value]
+        return bools[all(map(lambda pair: pair[0].value > pair[1].value,
+                             itertools.pairwise(operands)))]
 
 
 @global_attr(">=")
 class GreaterOrEq(BuiltIn):
     def execute_evaluated(self, operands: List[Expression], frame: Frame) -> Expression:
-        verify_exact_callable_length(self, 2, len(operands))
+        verify_min_callable_length(self, 2, len(operands))
         assert_all_numbers(operands)
-        return bools[operands[0].value >= operands[1].value]
+        return bools[all(map(lambda pair: pair[0].value >= pair[1].value,
+                             itertools.pairwise(operands)))]
 
 
 @global_attr("even?")
