@@ -42,8 +42,11 @@ class UnsupportedSingleOperandPrimitive(SingleOperandPrimitive):
 
 def load_primitives():
     __import__("arithmetic")
+    __import__("chars")
     __import__("conversions")
     __import__("lists")
+    __import__("strings")
+    __import__("system")
     __import__("type_checking")
     __import__("console")
     __import__("graphics")
