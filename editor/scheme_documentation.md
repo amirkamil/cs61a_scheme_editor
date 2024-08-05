@@ -981,7 +981,7 @@ will cause an error.
 <a class='builtin-header' id='list'>**`list`**</a>
 
 ```scheme
-(list <item> ...)
+(list [item] ...)
 ```
 
 Returns a list with the `item`s in order as its elements.
@@ -1791,6 +1791,61 @@ that `(string=? str (string-copy str))` is true but `(eq? str
 (string-copy str))` is false. `str` must be a string.
 
 ## Vectors
+
+<a class='builtin-header' id='make-vector'>**`make-vector`**</a>
+
+```scheme
+(make-vector <num> [item])
+```
+
+Returns a vector of length `num`, which must be a nonnegative integer.
+If `item` is provided, each element of the vector is set to `item`.
+Otherwise, the contents of the vector are unspecified.
+
+<a class='builtin-header' id='vector'>**`vector`**</a>
+
+```scheme
+(vector [item] ...)
+```
+
+Returns a vector consisting of the given items.
+
+<a class='builtin-header' id='vector-length'>**`vector-length`**</a>
+
+```scheme
+(vector-length <vec>)
+```
+
+Returns the length of the given vector. `vec` must be a vector.
+
+<a class='builtin-header' id='vector-ref'>**`vector-ref`**</a>
+
+```scheme
+(vector-ref <vec> <num>)
+```
+
+Returns the item at the given index in the vector. `vec` must be a
+vector, and `num` must be an integer between 0 and one less than the
+length of `vec`.
+
+<a class='builtin-header' id='vector-set!'>**`vector-set!`**</a>
+
+```scheme
+(vector-set! <vec> <num> <item>)
+```
+
+Replaces the element at index `num` in `vec` with `item`. `vec` must
+be a vector, and `num` must be an integer between 0 and one less than
+the length of `vec`. The return value is unspecified.
+
+<a class='builtin-header' id='vector-fill!'>**`vector-fill!`**</a>
+
+```scheme
+(vector-fill! <vec> <item>)
+```
+
+Replaces all elements in `vec` with `item`. `vec` must be a vector.
+The return value is unspecified.
 
 ## Promises
 
