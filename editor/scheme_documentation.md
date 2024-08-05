@@ -1439,6 +1439,186 @@ Returns true if `num` is positive. `num` must be a number.
 
 Returns true if `num` is zero. `num` must be a number.
 
+## Characters
+
+<a class='builtin-header' id='char=?'>**`char=?`**</a>
+
+```scheme
+(char=? <char1> <char2>)
+```
+
+Returns true if `char1` and `char2` represent the same character
+value. `char1` and `char2` must be characters.
+
+<a class='builtin-header' id='char<?'>**`char<?`**</a>
+
+```scheme
+(char<? <char1> <char2>)
+```
+
+Returns true if `char1` has a numeric value that is less than that of
+`char2`. In this implementation, it is equivalent to `(<
+(char->integer char1) (char->integer char2))`. `char1` and `char2`
+must be characters.
+
+<a class='builtin-header' id='char>?'>**`char>?`**</a>
+
+```scheme
+(char>? <char1> <char2>)
+```
+
+Returns true if `char1` has a numeric value that is greater than that
+of `char2`. In this implementation, it is equivalent to `(>
+(char->integer char1) (char->integer char2))`. `char1` and `char2`
+must be characters.
+
+<a class='builtin-header' id='char<=?'>**`char<=?`**</a>
+
+```scheme
+(char<=? <char1> <char2>)
+```
+
+Returns true if `char1` has a numeric value that is less than or equal
+to that of `char2`. In this implementation, it is equivalent to `(<=
+(char->integer char1) (char->integer char2))`. `char1` and `char2`
+must be characters.
+
+<a class='builtin-header' id='char>=?'>**`char<?`**</a>
+
+```scheme
+(char>=? <char1> <char2>)
+```
+
+Returns true if `char1` has a numeric value that is greater than or
+equal to that of `char2`. In this implementation, it is equivalent to
+`(>= (char->integer char1) (char->integer char2))`. `char1` and
+`char2` must be characters.
+
+<a class='builtin-header' id='char-ci=?'>**`char-ci=?`**</a>
+
+```scheme
+(char-ci=? <char1> <char2>)
+```
+
+Returns true if `char1` and `char2` represent the same character
+value, ignoring case for alphabetic characters. In this
+implementation, it is equivalent to `(char=? (char-downcase char1)
+(char-downcase char2)). `char1` and `char2` must be characters.
+
+<a class='builtin-header' id='char-ci<?'>**`char-ci<?`**</a>
+
+```scheme
+(char-ci<? <char1> <char2>)
+```
+
+Returns true if `char1` has a numeric value that is less than that of
+`char2`, ignoring case for alphabetic characters. In this
+implementation, it is equivalent to `(char<? (char-downcase char1)
+(char-downcase char2))`. `char1` and `char2` must be characters.
+
+<a class='builtin-header' id='char-ci>?'>**`char-ci>?`**</a>
+
+```scheme
+(char-ci>? <char1> <char2>)
+```
+
+Returns true if `char1` has a numeric value that is greater than that
+of `char2`, ignoring case for alphabetic characters. In this
+implementation, it is equivalent to `(char>? (char-downcase char1)
+(char-downcase char2))`. `char1` and `char2` must be characters.
+
+<a class='builtin-header' id='char-ci<=?'>**`char-ci<=?`**</a>
+
+```scheme
+(char-ci<=? <char1> <char2>)
+```
+
+Returns true if `char1` has a numeric value that is less than or equal
+to that of `char2`, ignoring case for alphabetic characters. In this
+implementation, it is equivalent to `(char<=? (char-downcase char1)
+(char-downcase char2))`. `char1` and `char2` must be characters.
+
+<a class='builtin-header' id='char-ci>=?'>**`char-ci>=?`**</a>
+
+```scheme
+(char-ci>=? <char1> <char2>)
+```
+
+Returns true if `char1` has a numeric value that is greater than or
+equal to that of `char2`, ignoring case for alphabetic characters. In
+this implementation, it is equivalent to `(char>=? (char-downcase
+char1) (char-downcase char2))`. `char1` and `char2` must be
+characters.
+
+<a class='builtin-header' id='char-alphabetic?'>**`char-alphabetic?`**</a>
+
+```scheme
+(char-alphabetic? <char>)
+```
+
+Returns true if `char` is an alphabetic character. `char` must be a
+character.
+
+<a class='builtin-header' id='char-numeric?'>**`char-numeric?`**</a>
+
+```scheme
+(char-numeric? <char>)
+```
+
+Returns true if `char` is a numeric character. `char` must be a
+character.
+
+<a class='builtin-header' id='char-whitespace?'>**`char-whitespace?`**</a>
+
+```scheme
+(char-whitespace? <char>)
+```
+
+Returns true if `char` is a whitespace character. `char` must be a
+character.
+
+<a class='builtin-header' id='char-lower-case?'>**`char-lower-case?`**</a>
+
+```scheme
+(char-lower-case? <char>)
+```
+
+Returns true if `char` is a lowercase alphabetic character. `char`
+must be a character.
+
+<a class='builtin-header' id='char-upper-case?'>**`char-upper-case?`**</a>
+
+```scheme
+(char-upper-case? <char>)
+```
+
+Returns true if `char` is an uppercase alphabetic character. `char`
+must be a character.
+
+<a class='builtin-header' id='char-upcase'>**`char-upcase`**</a>
+
+```scheme
+(char-upcase <char>)
+```
+
+If `char` represents a lowercase letter, returns its uppercase
+counterpart. Otherwise returns `char` itself. `char` must be a
+character.
+
+<a class='builtin-header' id='char-downcase'>**`char-downcase`**</a>
+
+```scheme
+(char-downcase <char>)
+```
+
+If `char` represents an uppercase letter, returns its lowercase
+counterpart. Otherwise returns `char` itself. `char` must be a
+character.
+
+## Strings
+
+## Vectors
+
 ## Promises
 
 <a class='builtin-header' id='force'>**`force`**</a>
