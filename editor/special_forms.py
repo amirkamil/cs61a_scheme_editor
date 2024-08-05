@@ -238,6 +238,10 @@ class Quote(Callable):
 @global_attr("eval")
 class Eval(Applicable):
     def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder, eval_operands=True):
+        if len(operands) == 2:
+            raise UnsupportedOperationError("the standard eval procedure; it implements "
+                                            "a non-standard version that takes in just "
+                                            "an expression without an environment")
         verify_exact_callable_length(self, 1, len(operands))
         if eval_operands:
             operand = evaluate(operands[0], frame, gui_holder.expression.children[1])
@@ -592,36 +596,87 @@ class Case(Callable):
         return Undefined
 
 
-class UnsupportedSpecialForm(Callable):
+class UnsupportedCallable(Callable):
     def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder):
         raise UnsupportedOperationError(self)
 
 
 @special_form("letrec")
-class Letrec(UnsupportedSpecialForm):
+class Letrec(UnsupportedCallable):
     pass  # unimplemented
 
 
 @special_form("do")
-class Do(UnsupportedSpecialForm):
+class Do(UnsupportedCallable):
     pass  # unimplemented
 
 
 @special_form("let-syntax")
-class LetSyntax(UnsupportedSpecialForm):
+class LetSyntax(UnsupportedCallable):
     pass  # unimplemented
 
 
 @special_form("letrec-syntax")
-class LetrecSyntax(UnsupportedSpecialForm):
+class LetrecSyntax(UnsupportedCallable):
     pass  # unimplemented
 
 
 @special_form("syntax-rules")
-class SyntaxRules(UnsupportedSpecialForm):
+class SyntaxRules(UnsupportedCallable):
     pass  # unimplemented
 
 
 @special_form("define-syntax")
-class DefineSyntax(UnsupportedSpecialForm):
+class DefineSyntax(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("for-each")
+class ForEach(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("call-with-current-continuation")
+@global_attr("call/cc")
+class CallCC(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("values")
+class Values(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("call-with-values")
+class CallWithValues(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("dynamic-wind")
+class DynamicWind(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("scheme-report-environment")
+class SchemeReportEnvironment(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("null-environment")
+class NullEnvironment(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("interaction-environment")
+class InteractionEnvironment(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("transcript-on")
+class TranscriptOn(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("transcript-off")
+class TranscriptOff(UnsupportedCallable):
     pass  # unimplemented

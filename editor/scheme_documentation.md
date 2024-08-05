@@ -204,7 +204,7 @@ for any reason, the promise remains unforced.
 For example
 
 ```scheme
-scm> (define p (delay (begin (print "hi") (/ 1 0))))
+scm> (define p (delay (begin (display "hi") (newline) (/ 1 0))))
 p
 scm> p
 #[promise (unforced)]
@@ -221,7 +221,7 @@ Error
 Or, for an example with type errors:
 
 ```scheme
-scm> (define p (delay (begin (print "hi") 2)))
+scm> (define p (delay (begin (display "hi") (newline) (+ 2 'a))))
 p
 scm> p
 #[promise (unforced)]
@@ -599,14 +599,14 @@ The web interpreter does not currently support `load`.
 
 Prints a new line.
 
-<a class='builtin-header' id='print'>**`print`**</a>
+<a class='builtin-header' id='write'>**`write`**</a>
 
 ```scheme
-(print <val>...)
+(write <val>)
 ```
 
-Prints the Scheme representation of each `val`, separated by spaces. Unlike `display`, this will include
-the outer quotes on a Scheme string, and a newline.
+Prints the Scheme representation of `val`. Unlike `display`, this will include
+the outer quotes on a Scheme string.
 
 ## Type Checking
 
