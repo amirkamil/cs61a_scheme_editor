@@ -102,7 +102,7 @@ class SetCar(BuiltIn):
         if not isinstance(pair, Pair):
             raise OperandDeduceError(f"set-car! expected a Pair, received {pair}.")
         pair.first = val
-        log.logger.raw_out("WARNING: Mutation operations on pairs are not yet supported by the debugger.")
+        log.logger.raw_out("WARNING: Mutation operations on pairs are not yet supported by the debugger.\n")
         return Undefined
 
 
@@ -118,7 +118,7 @@ class SetCdr(BuiltIn):
             if not isinstance(val, (Pair, Promise, NilType)):
                 raise OperandDeduceError(f"Unable to assign {val} to cdr, expected a Pair, Nil, or Promise.")
             pair.rest = val
-            log.logger.raw_out("WARNING: Mutation operations on pairs are not yet supported by the debugger.")
+            log.logger.raw_out("WARNING: Mutation operations on pairs are not yet supported by the debugger.\n")
             return Undefined
 
 

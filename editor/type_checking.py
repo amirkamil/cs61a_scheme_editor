@@ -92,10 +92,21 @@ class IsVector(SingleOperandPrimitive):
     def execute_simple(self, operand: Expression) -> Expression:
         return bools[isinstance(operand, Vector)]
 
+@global_attr("complex?")
+class IsComplex(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        return bools[isinstance(operand, Number)]
+
 @global_attr("real?")
 class IsReal(SingleOperandPrimitive):
     def execute_simple(self, operand: Expression) -> Expression:
         return bools[isinstance(operand, Number)]
+
+
+@global_attr("rational?")
+class IsRational(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression):
+        return bools[isinstance(operand, Number) and isinstance(operand.value, int)]
 
 
 @global_attr("exact?")
