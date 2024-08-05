@@ -110,17 +110,15 @@ form a valid integer or floating-point number.
 
 ### Strings
 
-Unlike other implementations, 61A Scheme has no concept of individual
-characters. Strings are considered atomic data types in their own right. Strings
-can be entered into the intepreter as a sequence of characters inside double
-quotes, with certain characters, such as line breaks and double quotes escaped.
-As a general rule, if a piece of text would be valid as a JSON key, it should
-work as a string in 61A Scheme. Strings in 61A Scheme are immutable, in contrast
-to most other Scheme implementations.
+Strings can be entered into the intepreter as a sequence of characters
+inside double quotes, with certain characters, such as line breaks and
+double quotes escaped. As a general rule, if a piece of text would be
+valid as a JSON key, it should work as a string in 61A Scheme. Strings
+in 61A Scheme are immutable, in contrast to most other Scheme
+implementations.
 
 These differences in how strings behave are due to the status of strings in the
-host languages: Python and Dart both have immutable strings with no concept of
-individual characters.
+host languages: Python and Dart both have immutable strings.
 
 ### Pairs and Lists
 
@@ -1292,8 +1290,8 @@ scm> (eqv? x x)
 (eq? <a> <b>)
 ```
 
-If `a` and `b` are both booleans or symbols, return true if
-they are equivalent; false otherwise.
+If `a` and `b` are both booleans or symbols, return true if they are
+equivalent; false otherwise.
 
 Otherwise, return true if `a` and `b` both refer to the same object in memory;
 false otherwise.
@@ -1616,6 +1614,181 @@ counterpart. Otherwise returns `char` itself. `char` must be a
 character.
 
 ## Strings
+
+<a class='builtin-header' id='make-string'>**`make-string`**</a>
+
+```scheme
+(make-string <num> <char>)
+```
+
+Returns a string of length `num` in which all characters have the
+value of `char`. `num` must be an integer, and `char` must be a
+character. Note that this interpreter does not support the standard
+single-argument form of `make-string` -- strings are immutable in this
+implementation, so a string containing unspecified values would not be
+useful.
+
+<a class='builtin-header' id='string'>**`string`**</a>
+
+```scheme
+(string [char] ...)
+```
+
+Returns a string consisting of the given characters. Each `char` must
+be a character.
+
+<a class='builtin-header' id='string-length'>**`string-length`**</a>
+
+```scheme
+(string-length <str>)
+```
+
+Returns the length of the given string. `str` must be a string.
+
+<a class='builtin-header' id='string-ref'>**`string-ref`**</a>
+
+```scheme
+(string-ref <str> <num>)
+```
+
+Returns the character value at the given index in the string. `str`
+must be a string, and `num` must be an integer between 0 and one less
+than the length of `str`.
+
+<a class='builtin-header' id='string=?'>**`string=?`**</a>
+
+```scheme
+(string=? <str1> <str2>)
+```
+
+Returns whether or not `str1` and `str2` have the same length and
+contents. `str1` and `str2` must be strings.
+
+<a class='builtin-header' id='string-ci=?'>**`string-ci=?`**</a>
+
+```scheme
+(string-ci=? <str1> <str2>)
+```
+
+Returns whether or not `str1` and `str2` have the same length and
+contents, ignoring case for alphabetic characters. `str1` and `str2`
+must be strings.
+
+<a class='builtin-header' id='string<?'>**`string<?`**</a>
+
+```scheme
+(string<? <str1> <str2>)
+```
+
+Returns whether or not `str1` is lexicographically less than `str2`,
+using the ordering of the numeric values of the characters in each
+string. `str1` and `str2` must be strings.
+
+<a class='builtin-header' id='string-ci<?'>**`string-ci<?`**</a>
+
+```scheme
+(string-ci<? <str1> <str2>)
+```
+
+Returns whether or not `str1` is lexicographically less than `str2`,
+using the ordering of the numeric values of the characters in each
+string, but treating corresponding lowercase and uppercase alphabetic
+characters as the same. `str1` and `str2` must be strings.
+
+<a class='builtin-header' id='string<=?'>**`string<=?`**</a>
+
+```scheme
+(string<=? <str1> <str2>)
+```
+
+Returns whether or not `str1` is lexicographically less than or equal
+to `str2`, using the ordering of the numeric values of the characters
+in each string. `str1` and `str2` must be strings.
+
+<a class='builtin-header' id='string-ci<=?'>**`string-ci<=?`**</a>
+
+```scheme
+(string-ci<=? <str1> <str2>)
+```
+
+Returns whether or not `str1` is lexicographically less than or equal
+to `str2`, using the ordering of the numeric values of the characters
+in each string, but treating corresponding lowercase and uppercase
+alphabetic characters as the same. `str1` and `str2` must be strings.
+
+<a class='builtin-header' id='string>?'>**`string>?`**</a>
+
+```scheme
+(string>? <str1> <str2>)
+```
+
+Returns whether or not `str1` is lexicographically greater than `str2`,
+using the ordering of the numeric values of the characters in each
+string. `str1` and `str2` must be strings.
+
+<a class='builtin-header' id='string-ci>?'>**`string-ci>?`**</a>
+
+```scheme
+(string-ci>? <str1> <str2>)
+```
+
+Returns whether or not `str1` is lexicographically greater than
+`str2`, using the ordering of the numeric values of the characters in
+each string, but treating corresponding lowercase and uppercase
+alphabetic characters as the same. `str1` and `str2` must be strings.
+
+<a class='builtin-header' id='string>=?'>**`string>=?`**</a>
+
+```scheme
+(string>=? <str1> <str2>)
+```
+
+Returns whether or not `str1` is lexicographically greater than or
+equal to `str2`, using the ordering of the numeric values of the
+characters in each string. `str1` and `str2` must be strings.
+
+<a class='builtin-header' id='string-ci>=?'>**`string-ci>=?`**</a>
+
+```scheme
+(string-ci>=? <str1> <str2>)
+```
+
+Returns whether or not `str1` is lexicographically greater than or
+equal to `str2`, using the ordering of the numeric values of the
+characters in each string, but treating corresponding lowercase and
+uppercase alphabetic characters as the same. `str1` and `str2` must be
+strings.
+
+<a class='builtin-header' id='substring'>**`substring`**</a>
+
+```scheme
+(substring <str> <start> <end>)
+```
+
+Returns a new string with the subset of characters from `str` starting
+at `start` (inclusive) and ending at `end` (exclusive). `str` must be
+string, `start` and `end` must be integers, `start` must be at least 0
+and at most `end`, and `end` must be at least `start` and at most the
+length of `str`.
+
+<a class='builtin-header' id='string-append'>**`string-append`**</a>
+
+```scheme
+(string-append [str] ...)
+```
+
+Returns a new string that is the concatenation of the contents of the
+given strings. Each `str` must be a string.
+
+<a class='builtin-header' id='string-copy'>**`string-copy`**</a>
+
+```scheme
+(string-copy <str>)
+```
+
+Returns a new string that is contains the same contents as `str`, such
+that `(string=? str (string-copy str))` is true but `(eq? str
+(string-copy str))` is false. `str` must be a string.
 
 ## Vectors
 

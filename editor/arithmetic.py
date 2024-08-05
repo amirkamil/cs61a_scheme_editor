@@ -2,7 +2,7 @@ import itertools
 import math
 from typing import List
 
-from datamodel import Expression, Number, bools, SingletonFalse, ValueHolder, Pair, SingletonTrue, Character, Vector
+from datamodel import Expression, Number, bools, SingletonFalse, ValueHolder, Pair, SingletonTrue, Character, String, Vector
 from environment import global_attr
 from evaluate_apply import Frame
 from helper import assert_all_numbers, verify_exact_callable_length, verify_min_callable_length
@@ -170,7 +170,10 @@ class IsEqv(BuiltIn):
     def execute_evaluated(self, operands: List[Expression], frame: Frame):
         verify_exact_callable_length(self, 2, len(operands))
         if all(isinstance(x, ValueHolder) for x in operands):
-            return bools[operands[0].value == operands[1].value]
+            if isinstance(operands[0], String):
+                return bools[operands[0] is operands[1]]
+            else:
+                return bools[operands[0].value == operands[1].value]
         return bools[operands[0] is operands[1]]
 
 
@@ -179,7 +182,7 @@ class IsEq(BuiltIn):
     def execute_evaluated(self, operands: List[Expression], frame: Frame):
         verify_exact_callable_length(self, 2, len(operands))
         if all(isinstance(x, ValueHolder) for x in operands):
-            if isinstance(operands[0], (Number, Character)):
+            if isinstance(operands[0], (Number, Character, String)):
                 return bools[operands[0] is operands[1]]
             else:
                 return bools[operands[0].value == operands[1].value]
