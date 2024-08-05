@@ -2,7 +2,7 @@ import itertools
 import math
 from typing import List
 
-from datamodel import Expression, Number, bools, SingletonFalse, ValueHolder, Pair, SingletonTrue
+from datamodel import Expression, Number, bools, SingletonFalse, ValueHolder, Pair, SingletonTrue, Character, Vector
 from environment import global_attr
 from evaluate_apply import Frame
 from helper import assert_all_numbers, verify_exact_callable_length, verify_min_callable_length
@@ -179,7 +179,7 @@ class IsEq(BuiltIn):
     def execute_evaluated(self, operands: List[Expression], frame: Frame):
         verify_exact_callable_length(self, 2, len(operands))
         if all(isinstance(x, ValueHolder) for x in operands):
-            if isinstance(operands[0], Number):
+            if isinstance(operands[0], (Number, Character)):
                 return bools[operands[0] is operands[1]]
             else:
                 return bools[operands[0].value == operands[1].value]
@@ -195,6 +195,11 @@ class IsEqual(BuiltIn):
         elif all(isinstance(x, Pair) for x in operands):
             return bools[IsEqual().execute_evaluated([operands[0].first, operands[1].first], frame) is SingletonTrue and \
                          IsEqual().execute_evaluated([operands[0].rest, operands[1].rest], frame) is SingletonTrue]
+        elif all(isinstance(x, Vector) for x in operands):
+            return bools[len(operands[0].value) == len(operands[1].value) and
+                         all(IsEqual().execute_evaluated([operands[0].value[i],
+                                                          operands[1].value[i]], frame)
+                             is SingletonTrue for i in range(len(operands[0].value)))]
         else:
             return IsEqv().execute_evaluated(operands, frame)
 

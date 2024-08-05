@@ -1106,7 +1106,7 @@ functions.
 (eqv? <a> <b>)
 ```
 
-If `a` and `b` are both numbers, booleans, or symbols, return true if
+If `a` and `b` are both numbers, characters, booleans, or symbols, return true if
 they are equivalent; false otherwise.
 
 Otherwise, return true if `a` and `b` both refer to the same object in memory;
@@ -1152,7 +1152,9 @@ scm> (eq? x x)
 ```
 
 Returns true if `a` and `b` are equivalent. For two pairs, they are equivalent
-if their `car`s are equivalent and their `cdr`s are equivalent.
+if their `car`s are equivalent and their `cdr`s are equivalent. For two vectors,
+they are equivalent if they have the same length, and their corresponding
+elements are equivalent.
 
 ```scheme
 scm> (equal? '(1 2 3) '(1 2 3))
