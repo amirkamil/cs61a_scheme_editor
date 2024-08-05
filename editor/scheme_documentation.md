@@ -541,21 +541,13 @@ Prints `val`. If `val` is a Scheme string, it will be output without quotes.
 
 A new line will not be automatically included.
 
-<a class='builtin-header' id='displayln'>**`displayln`**</a>
-
-```scheme
-(displayln <val>)
-```
-
-Like `display`, but includes a newline at the end.
-
 <a class='builtin-header' id='error'>**`error`**</a>
 
 ```scheme
-(error <msg>)
+(error [msg])
 ```
 
-Raises an `SchemeError` with `msg` as it's message. If there is no `msg`,
+Raises a `SchemeError` with `msg` as it's message. If there is no `msg`,
 the error's message will be empty.
 
 <a class='builtin-header' id='eval'>**`eval`**</a>
@@ -564,7 +556,9 @@ the error's message will be empty.
 (eval <expression>)
 ```
 
-Evaluates `expression` in the current environment.
+Evaluates `expression` in the current environment. This differs from
+the standard form of `eval`, which takes an additional environment
+argument.
 
 ```scheme
 scm> (eval '(cons 1 (cons 2 nil)))
@@ -627,6 +621,42 @@ false otherwise.
 
 Returns true if `arg` is a boolean; false otherwise.
 
+<a class='builtin-header' id='char?'>**`char?`**</a>
+
+```scheme
+(char? <arg>)
+```
+
+Returns true if `arg` is a character; false otherwise.
+
+<a class='builtin-header' id='complex?'>**`complex?`**</a>
+
+```scheme
+(complex? <arg>)
+```
+
+Returns true if `arg` is a number; false otherwise.
+
+<a class='builtin-header' id='eof-object?'>**`eof-object?`**</a>
+
+```scheme
+(eof-object? <arg>)
+```
+
+Returns true if `arg` is an EOF object; false otherwise. This
+implementation does not support EOF objects, so this will always
+return false.
+
+<a class='builtin-header' id='input-port?'>**`input-port?`**</a>
+
+```scheme
+(input-port? <arg>)
+```
+
+Returns true if `arg` is an input port; false otherwise. This
+implementation does not support input ports, so this will always
+return false.
+
 <a class='builtin-header' id='integer?'>**`integer?`**</a>
 
 ```scheme
@@ -668,6 +698,16 @@ Returns true if `arg` is a number; false otherwise.
 
 Returns true if `arg` is `nil` (the empty list); false otherwise.
 
+<a class='builtin-header' id='output-port?'>**`output-port?`**</a>
+
+```scheme
+(output-port? <arg>)
+```
+
+Returns true if `arg` is an output port; false otherwise. This
+implementation does not support output ports, so this will always
+return false.
+
 <a class='builtin-header' id='pair?'>**`pair?`**</a>
 
 ```scheme
@@ -692,13 +732,23 @@ Returns true if `arg` is a procedure; false otherwise.
 
 Returns true if `arg` is a promise; false otherwise.
 
+<a class='builtin-header' id='rational?'>**`rational?`**</a>
+
+```scheme
+(rational? <arg>)
+```
+
+Returns true if `arg` is a rational number (only integers are rational
+in this implementation); false otherwise.
+
 <a class='builtin-header' id=real?'>**`real?`**</a>
 
 ```scheme
 (real? <arg>)
 ```
 
-Returns true if `arg` is a number; false otherwise.
+Returns true if `arg` is a real number (all numbers are real in this
+implementation); false otherwise.
 
 <a class='builtin-header' id='string?'>**`string?`**</a>
 
@@ -715,6 +765,122 @@ Returns true if `arg` is a string; false otherwise.
 ```
 
 Returns true if `arg` is a symbol; false otherwise.
+
+<a class='builtin-header' id='vector?'>**`vector?`**</a>
+
+```scheme
+(vector? <arg>)
+```
+
+Returns true if `arg` is a vector; false otherwise.
+
+## Type Conversions
+
+<a class='builtin-header' id='number->string'>**`number->string`**</a>
+
+```scheme
+(number->string <num> [radix])
+```
+
+Returns a string representation of `num`, using `radix` as the base.
+If `radix` is not given, it defaults to 10. `num` must be a number. If
+`num` is an integer, then `radix` must be one of 2, 8, 10, or 16. If
+`num` is a floating-point number, then `radix` must be 10.
+
+<a class='builtin-header' id='string->number'>**`string->number`**</a>
+
+```scheme
+(string->number <str> [radix])
+```
+
+Parses `str`, which must be a string representation of a number, and
+returns the resulting number. Uses `radix` as the base if the base is
+not explicitly part of the string representation. `radix` must be one
+of 2, 8, 10, or 16 if the string represents an integer, or 10 if the
+string represents a floating-point number, and it defaults to 10 if it
+is not provided. Note that this interpreter parses string
+representations of numbers using Python notation rather than Scheme
+notation for numeric literals. It is an error if the given string is
+not a valid Python representation of a number in the given `radix`.
+
+<a class='builtin-header' id='symbol->string'>**`symbol->string`**</a>
+
+```scheme
+(symbol->string <sym>)
+```
+
+Returns a string corresponding to `sym`, which must be a symbol. For
+any symbol `sym`, it is guaranteed that `(eq? sym (string->symbol
+(symbol->string sym)))` is true.
+
+<a class='builtin-header' id='string->symbol'>**`string->symbol`**</a>
+
+```scheme
+(string->symbol <str>)
+```
+
+Returns a symbol corresponding to `str`, which must be a string. For
+any string `str`, it is guaranteed that `(string=? str (symbol->string
+(string->symbol str)))` is true. Note that it is possible to produce
+symbols via `string->symbol` that cannot be typed in by the user. The
+representation of such a symbol is implementation-dependent.
+
+<a class='builtin-header' id='char->integer'>**`char->integer`**</a>
+
+```scheme
+(char->integer <char>)
+```
+
+Returns an integer value corresponding to `char`, which must be a
+character. For any character `char`, it is guaranteed that `(char=?
+char (integer->char (char->integer char)))` is true.
+
+<a class='builtin-header' id='integer->char'>**`integer->char`**</a>
+
+```scheme
+(integer->char <num>)
+```
+
+Returns the character value corresponding to `num`, which must be an
+integer that corresponds to some character. In other words, there is
+some character `char` for which `(= num (char->integer char))` is
+true. For any such integer `num`, it is guaranteed that `(= num
+(char->integer (integer->char num)))` is true.
+
+<a class='builtin-header' id='string->list'>**`string->list`**</a>
+
+```scheme
+(string->list <str>)
+```
+
+Returns a list of the characters in `str`, which must be a string.
+
+<a class='builtin-header' id='list->string'>**`list->string`**</a>
+
+```scheme
+(list->string <lst>)
+```
+
+Returns a string constructed from the characters in `lst`, which must
+be a list of characters. Equivalent to `(apply string lst)`.
+
+<a class='builtin-header' id='vector->list'>**`vector->list`**</a>
+
+```scheme
+(vector->list <vec>)
+```
+
+Returns a list containing the elements from `vec`, which must be a
+vector.
+
+<a class='builtin-header' id='list->vector'>**`list->vector`**</a>
+
+```scheme
+(list->vector <lst>)
+```
+
+Returns a vector containing the elements from `lst`, which must be a
+proper list. Equivalent to `(apply vector lst)`.
 
 ## Pair and List Manipulation
 
@@ -1222,6 +1388,24 @@ arguments must be numbers.
 ```
 
 Returns true if `num` is even. `num` must be a number.
+
+<a class='builtin-header' id='exact?'>**`exact?`**</a>
+
+```scheme
+(exact? <num>)
+```
+
+Returns true if `num` is an exact number (an integer in this
+implementation).
+
+<a class='builtin-header' id='inexact?'>**`inexact?`**</a>
+
+```scheme
+(inexact? <num>)
+```
+
+Returns true if `num` is an inexact number (a floating-point number in
+this implementation).
 
 <a class='builtin-header' id='negative?'>**`negative?`**</a>
 

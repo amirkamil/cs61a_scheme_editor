@@ -251,6 +251,18 @@ class IsNegative(SingleOperandPrimitive):
         return bools[operand.value < 0]
 
 
+@global_attr("exact?")
+class IsExact(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        return bools[isinstance(operand, Number) and isinstance(operand.value, int)]
+
+
+@global_attr("inexact?")
+class IsInexact(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        return bools[isinstance(operand, Number) and not isinstance(operand.value, int)]
+
+
 @global_attr("rationalize")
 class Rationalize(UnsupportedBuiltIn):
     pass  # unimplemented

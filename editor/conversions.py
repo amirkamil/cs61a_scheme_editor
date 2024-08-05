@@ -81,8 +81,13 @@ class SymbolToString(SingleOperandPrimitive):
 @global_attr("string->symbol")
 class StringToSymbol(SingleOperandPrimitive):
     def _escape(self, value: str) -> bool:
-        if is_number(value) or value.lower() in ('nil', '#f', '#t') or \
-               value.startswith("#\\") or set(value) & set(SPECIALS):
+        needs_escaping = (is_number(value) or value.lower() in ('nil', '#f', '#t') or
+                          value.startswith("#\\"))
+        for c in value:
+            if c in SPECIALS or c.isupper():
+                needs_escaping = True
+                break
+        if needs_escaping:
             for escapee in "\\[]":
                 value = value.replace(escapee, "\\" + escapee)
             value = f"[{value}]"
