@@ -67,9 +67,10 @@ leave unevaluated. `'(+ 1 2)` and `'a` are equivalent to `(quote (+ 1 2))` and
 
 ### Miscellaneous
 
-Like R5RS, 61A Scheme is entirely case-insensitive (aside from strings). This
-specification will use lowercase characters in symbols, but the corresponding
-uppercase characters may be used interchangeably.
+Like R5RS, MiScheme is entirely case-insensitive (aside from strings
+and characters). This specification will use lowercase characters in
+symbols, but the corresponding uppercase characters may be used
+interchangeably.
 
 ## Types of Values
 
@@ -113,8 +114,8 @@ form a valid integer or floating-point number.
 Strings can be entered into the intepreter as a sequence of characters
 inside double quotes, with certain characters, such as line breaks and
 double quotes escaped. As a general rule, if a piece of text would be
-valid as a JSON key, it should work as a string in 61A Scheme. Strings
-in 61A Scheme are immutable, in contrast to most other Scheme
+valid as a JSON key, it should work as a string in MiScheme. Strings
+in MiScheme are immutable, in contrast to most other Scheme
 implementations.
 
 These differences in how strings behave are due to the status of strings in the
@@ -173,12 +174,14 @@ defined in when called. The expressions in the lambda's body are than evaluated
 in this new environment. Mu procedures are similar, but the new frame's parent
 is the frame in which the `mu` is called, not the frame in which it was created.
 
-61A Scheme also has macro procedures, which must be defined with the
-`define-macro` special form. Macros work similarly to lambdas, except that they
-pass the argument expressions in the call expression into the macro instead of
-the evaluated arguments and they then evaluate the expression the macro returns
-in the calling environment afterwards. The modified process for evaluating
-macro call expressions is:
+MiScheme also has macro procedures, which must be defined with the
+`define-macro` special form (MiScheme does not support the standard
+`define-syntax` and `syntax-rules`). Macros work similarly to lambdas,
+except that they pass the argument expressions in the call expression
+into the macro instead of the evaluated arguments and they then
+evaluate the expression the macro returns in the calling environment
+afterwards. The modified process for evaluating macro call expressions
+is:
 
 1. Evaluate the operator. If it is not a macro procedure, follow the normal call
 expression steps.
@@ -205,12 +208,12 @@ For example
 scm> (define p (delay (begin (display "hi") (newline) (/ 1 0))))
 p
 scm> p
-#[promise (unforced)]
+#[promise]
 scm> (force p)
 hi
 Error
 scm> p
-#[promise (unforced)]
+#[promise]
 scm> (force p)
 hi
 Error
@@ -222,12 +225,12 @@ Or, for an example with type errors:
 scm> (define p (delay (begin (display "hi") (newline) (+ 2 'a))))
 p
 scm> p
-#[promise (unforced)]
+#[promise]
 scm> (force p)
 hi
 Error
 scm> p
-#[promise (unforced)]
+#[promise]
 scm> (force p)
 hi
 Error
@@ -236,9 +239,9 @@ Error
 > A note for those familiar with promises in languages like JavaScript: although
 Scheme promises and JS-style promises originate from the
 [same general concept][promise wiki], JS promises are best described as a
-placeholder for a value that is computed asynchronously. The Python-based 61A
-Scheme interpreter has no concept of asynchrony, so its promises only represent
-delayed evaluation.
+placeholder for a value that is computed asynchronously. The
+Python-based MiScheme interpreter has no concept of asynchrony, so its
+promises only represent delayed evaluation.
 
   [promise wiki]: https://en.wikipedia.org/wiki/Futures_and_promises
 
@@ -247,8 +250,6 @@ delayed evaluation.
 In all of the syntax definitions below, `<x>` refers to a required element `x`
 that can vary, while `[x]` refers to an optional element `x`. Ellipses
 indicate that there can be more than one of the preceding element.
-
-The following special forms are included in all versions of 61A Scheme.
 
 ### **`define`**
 
@@ -280,7 +281,7 @@ f
 
 #### Variadic functions
 
-In staff implementations of the scheme language, you can define a function that takes a variable number of arguments by using the `variadic` special form. The construct `variadic` constructs a "variadic symbol" that is bound to multiple rather than a single variable. This is only allowed at the end of an arguments list
+In this implementation of the scheme language, you can define a function that takes a variable number of arguments by using the `variadic` special form. The construct `variadic` constructs a "variadic symbol" that is bound to multiple rather than a single variable. This is only allowed at the end of an arguments list
 
 ```scheme
 scm> (define (f x (variadic y)) (append y (list x)))
@@ -487,10 +488,6 @@ See above. `,<expr2>` is equivalent to the form mentioned above.
 
     (unquote-splicing <expr2>)
 
-> This special form is included in the staff interpreter and the web
-> interpreter, but it is not in scope for the course and is not included in the
-> project.
-
 Similar to `unquote`, except that `expr2` must evaluate to a list, which is
 then spliced into the structure containing it in `expression`.
 
@@ -500,14 +497,14 @@ then spliced into the structure containing it in `expression`.
 
     (define-macro (<name> [param] ...) <body> ...)
 
-> This special form is implemented as part of an extra credit problem.
+> This special form is implemented as an extension in lieu of standard macros.
 
 Constructs a new macro procedure with `param`s as its parameters and the `body`
 expressions as its body and binds it to `name` in the current environment.
 `name` must be a valid Scheme symbol. Each `param` must be a unique valid Scheme
 symbol. `(<name> [param] ...)` can be [variadic](#variadic-functions).
 
-Macro procedures should be lexically scoped, like lambda procedures.
+Macro procedures are lexically scoped, like lambda procedures.
 
 ## Core Interpreter
 

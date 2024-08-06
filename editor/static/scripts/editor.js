@@ -10,8 +10,6 @@ export {register};
 
 function register(layout) {
     layout.registerComponent('editor', function (container, componentState) {
-        let decoded = $.parseJSON(start_data);
-        let testable = componentState.id < decoded["files"].length;
         let test_case = states[componentState.id].file_name.startsWith(temp_file);
 
         container.getElement().html(`
@@ -26,10 +24,6 @@ function register(layout) {
                 <button type="button" data-toggle="tooltip"
                             title="Open a console and run the program locally."
                             class="btn-success toolbar-btn run-btn">Run</button>
-                ${testable ?
-            `<button type="button" data-toggle="tooltip"
-                            title="Run all ok.py tests locally."
-                            class="btn-danger toolbar-btn test-btn">Test</button>` : ``}
                 <button type="button" data-toggle="tooltip"
                             title="Step through the program's execution."
                             class="btn-primary toolbar-btn sub-btn">Debug</button>          
@@ -76,10 +70,6 @@ function register(layout) {
             container.on("resize", function () {
                 editor.resize();
             });
-
-            if (testable) {
-                states[componentState.id].file_name = decoded["files"][componentState.id];
-            }
 
             name = states[componentState.id].file_name;
 

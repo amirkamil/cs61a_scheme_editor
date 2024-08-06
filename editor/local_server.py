@@ -15,7 +15,6 @@ from urllib.error import URLError
 from urllib.request import Request, urlopen
 
 import execution
-import ok_interface
 import log
 from documentation import search
 from execution_parser import strip_comments
@@ -82,11 +81,6 @@ class Handler(server.BaseHTTPRequestHandler):
             code = data["code[]"]
             javastyle = data["javastyle"][0] == "true"
             self.wfile.write(bytes(json.dumps({"result": "success", "formatted": prettify(code, javastyle)}), "utf-8"))
-
-        elif path == "/test":
-            self.cancellation_event.clear()  # Make sure we don't have lingering cancellation requests from before
-            output = cancelable_subprocess_call(self.cancellation_event, (sys.argv[0], os.path.splitext(ok_interface.__file__)[0] + ".py"), -1, sys.executable, subprocess.PIPE, subprocess.PIPE, None)
-            self.wfile.write(output.split(ok_interface.BEGIN_OUTPUT)[1])
 
         elif path == "/list_files":
             self.wfile.write(bytes(json.dumps(get_scm_files()), "utf-8"))
@@ -311,6 +305,5 @@ r'''
 ''')
         if supports_color():
             print("\033[91m" + "\033[1m" + "\033[4m", end="")
-        print("Remember that you should run python ok in a separate terminal window, to avoid stopping the editor process.")
         if supports_color():
             print("\033[0m" * 3, end="")
