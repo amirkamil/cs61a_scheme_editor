@@ -7,10 +7,11 @@ from scheme_exceptions import ParseError
 class FormatList:
     def __init__(self,
                  contents: List['Formatted'],
+                 open_paren,
                  close_paren,
                  prefix: str=""):
         self.contents = contents
-        self.open_paren = "(" if close_paren == ")" else "["
+        self.open_paren = open_paren
         self.close_paren = close_paren
         self.prefix = prefix
 
@@ -44,6 +45,7 @@ class FormatComment:
 
 
 Formatted = Union[FormatList, FormatAtom, FormatComment]
+EXTENDED_SPECIALS = SPECIALS + ["#(", "#["]
 
 
 def get_expression(buffer: TokenBuffer) -> Formatted:
@@ -54,10 +56,10 @@ def get_expression(buffer: TokenBuffer) -> Formatted:
         buffer.pop_next_token()
         out = FormatAtom("#[" + buffer.pop_next_token().value + "]")
         buffer.pop_next_token()
-    elif token in SPECIALS:
+    elif token in EXTENDED_SPECIALS:
         if token in ("(", "[", "#(", "#["):
-            out = get_rest_of_list(buffer, ")" if token in ("(", "#(") else "]",
-                                   token.value[0] == "#")
+            out = get_rest_of_list(buffer, token.value,
+                                   ")" if token in ("(", "#(") else "]")
         elif token in ("'", "`"):
             out = get_expression(buffer)
             out.prefix = token.value + out.prefix
@@ -85,9 +87,9 @@ def get_expression(buffer: TokenBuffer) -> Formatted:
     return out
 
 
-def get_rest_of_list(buffer: TokenBuffer, end_paren: str):
+def get_rest_of_list(buffer: TokenBuffer, open_paren: str, end_paren: str):
     out = []
     while buffer.get_next_token() != end_paren:
         out.append(get_expression(buffer))
     buffer.pop_next_token()
-    return FormatList(out, end_paren)
+    return FormatList(out, open_paren, end_paren)

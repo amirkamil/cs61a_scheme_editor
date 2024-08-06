@@ -50,7 +50,7 @@ class TokenBuffer:
 
 def tokenize(string, do_comments, ignore_brackets) -> List[Token]:
     string = string.strip()
-    parens = "()" if ignore_brackets else "()[]"
+    parens = "(" if ignore_brackets else "(["
     tokens = []
     i = 0
     first_in_line = True
