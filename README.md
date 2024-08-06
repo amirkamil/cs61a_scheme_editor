@@ -9,7 +9,7 @@ navigate to the URL you see in the terminal (e.g.
 http://127.0.0.1:31415/).
 
 Use `python3 editor -f [filenames]...` to specify the files to
-initially open.
+initially open. The files must be in the current directory.
 
 This tool has no dependencies, and requires web access only to load
 the Glyphicons (all other libraries are self contained).

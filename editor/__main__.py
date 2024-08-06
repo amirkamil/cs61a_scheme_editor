@@ -27,7 +27,7 @@ parser = argparse.ArgumentParser(description="MiScheme Editor - Winter 2025")
 
 parser.add_argument("-f", "--files",
                     type=argparse.FileType('r+'),
-                    help="Scheme files to open",
+                    help="Scheme files to open. Files must be in the current directory.",
                     metavar="FILE",
                     nargs='*')
 parser.add_argument("-nb", "--nobrowser",
@@ -56,19 +56,21 @@ if args.reformat is not None:
 
 log.logger.dotted = not args.no_dotted
 
-configs = [f for f in os.listdir(os.curdir) if f.endswith(".ok")]
+scheme_files = [f for f in os.listdir(os.curdir) if f.endswith(".scm")]
 
-if args.files is not None:
+if args.files:
     file_names = [os.path.basename(file.name) for file in args.files]
     for file in args.files:
+        if file.name != os.path.basename(file.name):
+            print(f"WARNING: ignoring path for file {file.name}. "
+                  "Files must be in the current directory.")
         file.close()
 else:
     file_names = []
-    if len(configs) > 1:
-        parser.error("Multiple configs detected, files to be opened must be specified explicitly.")
-    elif configs:
-        with open(configs[0]) as f:
-            file_names = [name for name in json.loads(f.read())["src"] if name.endswith(".scm")]
+    if scheme_files:
+        file_names = scheme_files[:1]
     else:
+        with open("scratch.scm", "w"):
+            pass
         file_names = ["scratch.scm"]
 local_server.start(file_names, args.port, not args.nobrowser)
