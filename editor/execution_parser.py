@@ -1,6 +1,6 @@
 from typing import Union
 
-from datamodel import Expression, Symbol, Number, Nil, SingletonTrue, SingletonFalse, String
+from datamodel import Expression, Symbol, Number, Nil, SingletonTrue, SingletonFalse, String, Character, Vector
 from helper import make_list
 from lexer import TokenBuffer, SPECIALS
 from log import logger
@@ -48,8 +48,9 @@ def get_expression(buffer: TokenBuffer) -> Union[Expression, None]:
     token = buffer.pop_next_token()
     if token is None:
         return None
-    elif token in ("(", "["):
-        return get_rest_of_list(buffer, ")" if token == "(" else "]")
+    elif token in ("(", "[", "#(", "#["):
+        return get_rest_of_list(buffer, ")" if token in ("(", "#(") else "]",
+                                token.value[0] == "#")
     elif token == "'":
         return make_list([Symbol("quote"), get_expression(buffer)])
     elif token == ",":
@@ -78,6 +79,8 @@ def get_expression(buffer: TokenBuffer) -> Union[Expression, None]:
         return SingletonTrue
     elif token == "#f" or token.value.lower() == "false":
         return SingletonFalse
+    elif token.value.startswith("#\\"):
+        return Character(token.value)
     elif token == "nil":
         return Nil
     elif is_str(token.value):
@@ -106,7 +109,7 @@ def get_string(buffer: TokenBuffer) -> String:
     return String("".join(out))
 
 
-def get_rest_of_list(buffer: TokenBuffer, end_paren: str) -> Expression:
+def get_rest_of_list(buffer: TokenBuffer, end_paren: str, is_vector: bool) -> Expression:
     out = []
     last = Nil
     while True:
@@ -115,6 +118,10 @@ def get_rest_of_list(buffer: TokenBuffer, end_paren: str) -> Expression:
             buffer.pop_next_token()
             break
         elif logger.dotted and next == ".":
+            if is_vector:
+                raise ParseError("Dot may not occur in a vector.")
+            if not out:
+                raise ParseError("At least one expression must precede a dot in a dotted list.")
             buffer.pop_next_token()
             last = get_expression(buffer)
             if buffer.pop_next_token() != end_paren:
@@ -122,8 +129,7 @@ def get_rest_of_list(buffer: TokenBuffer, end_paren: str) -> Expression:
             break
         expr = get_expression(buffer)
         out.append(expr)
-    out = make_list(out, last)
-    return out
+    return Vector(out) if is_vector else make_list(out, last)
 
 
 def is_number(token: str) -> bool:

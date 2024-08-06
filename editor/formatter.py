@@ -6,24 +6,15 @@ import lexer as lexer
 from format_parser import FormatAtom, FormatComment, FormatList, Formatted, get_expression
 
 LINE_LENGTH = 50
-MAX_EXPR_COUNT = 10
-MAX_EXPR_LEN = 30
-INDENT = 4
 
 DEFINE_VALS = ["define", "define-macro"]
 DECLARE_VALS = ["lambda", "mu"]
-SHORTHAND = {"quote": "'", "quasiquote": "`", "unquote": ",", "unquote-splicing": ",@", "variadic": "."}
 MULTILINE_VALS = ["let", "cond", "if"]
-
-FREE_TOKENS = ["if", "define", "define-macro", "mu", "lambda"]
-
-OPEN_PARENS = ["(", "["]
-CLOSE_PARENS = [")", "]"]
 
 CACHE_SIZE = 2 ** 8
 
 
-def prettify(strings: List[str], javastyle: bool = False) -> str:
+def prettify(strings: List[str], javastyle: bool = True) -> str:
     out = []
     for i, string in enumerate(strings):
         if not string.strip():

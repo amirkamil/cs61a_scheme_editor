@@ -10,9 +10,10 @@ from execution_parser import get_expression
 from helper import pair_to_list, verify_exact_callable_length, verify_min_callable_length, \
     make_list, dotted_pair_to_list
 from lexer import TokenBuffer
+from lists import Memv
 from log import Holder, VisualExpression, return_symbol, logger
 from scheme_exceptions import OperandDeduceError, IrreversibleOperationError, LoadError, SchemeError, TypeMismatchError, \
-    CallableResolutionError
+    CallableResolutionError, UnsupportedOperationError
 
 
 class ProcedureObject(Callable):
@@ -31,7 +32,7 @@ class ProcedureObject(Callable):
         self.var_param = var_param
         self.body = body
         self.frame = frame
-        self.name = name if name is not None else self.name
+        self.name = name if name is not None else f"[{self.name}]"
 
     def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder, eval_operands=True):
         new_frame = Frame(self.name, self.frame if self.lexically_scoped else frame)
@@ -79,14 +80,15 @@ class ProcedureObject(Callable):
     def __repr__(self):
         if self.var_param is not None:
             if logger.dotted:
-                varparams = ". " + self.var_param.value
+                varparams = " . " + self.var_param.value
             else:
-                varparams = "(variadic " + self.var_param.value + ")"
-            if self.params:
-                varparams = " " + varparams
+                varparams = " (variadic " + self.var_param.value + ")"
         else:
             varparams = ""
-        return f"({self.name} {' '.join(map(repr, self.params))}{varparams}) [parent = {self.frame.id}]"
+        params = " ".join(map(repr, self.params))
+        if self.params:
+            params = " " + params
+        return f"({self.name}{params}{varparams}) [parent = {self.frame.id}]"
 
     def __str__(self):
         return f"#[{self.name}]"
@@ -113,12 +115,13 @@ class MacroObject(ProcedureObject, Callable):
 class ProcedureBuilder(Callable):
     procedure: Type[ProcedureObject]
 
-    def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder, name: str = "lambda"):
+    def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder, name: str = None):
         verify_min_callable_length(self, 2, len(operands))
         params = operands[0]
         if not logger.dotted and not isinstance(params, (Pair, NilType)):
             raise OperandDeduceError(f"Expected Pair as parameter list, received {params}.")
         params, var_param = dotted_pair_to_list(params)
+        param_set = set()
         for i, param in enumerate(params):
             if (logger.dotted or i != len(params) - 1) and not isinstance(param, Symbol):
                 raise OperandDeduceError(f"Expected Symbol in parameter list, received {param}.")
@@ -130,10 +133,14 @@ class ProcedureBuilder(Callable):
                         param_vals[0].value != "variadic":
                     raise OperandDeduceError(f"Each member of a parameter list must be a Symbol or a variadic "
                                              f"parameter, not {param}.")
-                var_param = param_vals[1]
+                param = var_param = param_vals[1]
                 params.pop()
+            if param.value in param_set:
+                raise OperandDeduceError(f"Duplicate name in parameter list: {param}.")
+            param_set.add(param.value)
 
-        return self.procedure(params, var_param, operands[1:], frame, name)
+        name_arg = (name,) if name else ()
+        return self.procedure(params, var_param, operands[1:], frame, *name_arg)
 
 
 @special_form("lambda")
@@ -231,6 +238,10 @@ class Quote(Callable):
 @global_attr("eval")
 class Eval(Applicable):
     def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder, eval_operands=True):
+        if len(operands) == 2:
+            raise UnsupportedOperationError("the standard eval procedure; it implements "
+                                            "a non-standard version that takes in just "
+                                            "an expression without an environment")
         verify_exact_callable_length(self, 1, len(operands))
         if eval_operands:
             operand = evaluate(operands[0], frame, gui_holder.expression.children[1])
@@ -244,16 +255,18 @@ class Eval(Applicable):
 @global_attr("apply")
 class Apply(Applicable):
     def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder, eval_operands=True):
-        verify_exact_callable_length(self, 2, len(operands))
+        verify_min_callable_length(self, 2, len(operands))
         if eval_operands:
             operands = evaluate_all(operands, frame, gui_holder.expression.children[1:])
-        func, args = operands
+        func, args_mid, last_arg = operands[0], operands[1:-1], operands[-1]
         if not isinstance(func, Applicable):
             raise OperandDeduceError(f"Unable to apply {func}.")
-        gui_holder.expression.set_entries([VisualExpression(Pair(func, args), gui_holder.expression.display_value)])
+        if not isinstance(last_arg, Pair) and last_arg is not Nil:
+            raise OperandDeduceError(f"Expected last argument of apply to be a list, not {last_arg}.")
+        args = args_mid + pair_to_list(last_arg)
+        gui_holder.expression.set_entries([VisualExpression(Pair(func, make_list(args)), gui_holder.expression.display_value)])
         gui_holder.expression.children[0].expression.children = []
         gui_holder.apply()
-        args = pair_to_list(args)
         return func.execute(args, frame, gui_holder.expression.children[0], False)
 
 
@@ -269,6 +282,10 @@ class Cond(Callable):
             eval_condition = SingletonTrue
             if not isinstance(expanded[0], Symbol) or expanded[0].value != "else":
                 eval_condition = evaluate(expanded[0], frame, cond_holder.expression.children[0])
+            elif cond_i != len(operands) - 1:
+                raise OperandDeduceError(f"Else clause can only be the last clause of cond.")
+            elif len(expanded) < 2:
+                raise OperandDeduceError(f"Else clause needs to have an expression.")
             if (isinstance(expanded[0], Symbol) and expanded[0].value == "else") \
                     or eval_condition is not SingletonFalse:
                 out = eval_condition
@@ -299,40 +316,52 @@ class Or(Callable):
         return SingletonFalse
 
 
+def _let_impl(receiver, kind, operands, frame, gui_holder, nest_frames=False):
+    verify_min_callable_length(receiver, 2, len(operands))
+
+    bindings = operands[0]
+    if not isinstance(bindings, Pair) and bindings is not Nil:
+        raise OperandDeduceError(f"Expected first argument of {kind} to be a Pair, not {bindings}.")
+
+    old_frame = frame
+    new_frame = Frame(f"anonymous {kind}", old_frame)
+
+    bindings_holder = gui_holder.expression.children[1]
+
+    bindings = pair_to_list(bindings)
+    name_set = set()
+
+    for i, binding in enumerate(bindings):
+        if not isinstance(binding, Pair):
+            raise OperandDeduceError(f"Expected binding to be a Pair, not {binding}.")
+        binding_holder = bindings_holder.expression.children[i]
+        binding = pair_to_list(binding)
+        if len(binding) != 2:
+            raise OperandDeduceError(f"Expected binding to be of length 2, not {len(binding)}.")
+        name, expr = binding
+        if not isinstance(name, Symbol):
+            raise OperandDeduceError(f"Expected first element of binding to be a Symbol, not {name}.")
+        if name.value in name_set:
+            raise OperandDeduceError(f"Duplicate binding name in {kind}: {name}.")
+        name_set.add(name.value)
+        new_frame.assign(name, evaluate(expr, old_frame, binding_holder.expression.children[1]))
+        if nest_frames and i < len(bindings) - 1:
+            old_frame = new_frame
+            new_frame = Frame(f"anonymous {kind}", old_frame)
+
+    value = None
+
+    for i, (operand, holder) in enumerate(zip(operands[1:], gui_holder.expression.children[2:])):
+        value = evaluate(operand, new_frame, holder, i == len(operands) - 2)
+
+    new_frame.assign(return_symbol, value)
+    return value
+
+
 @special_form("let")
 class Let(Callable):
     def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder):
-        verify_min_callable_length(self, 2, len(operands))
-
-        bindings = operands[0]
-        if not isinstance(bindings, Pair) and bindings is not Nil:
-            raise OperandDeduceError(f"Expected first argument of let to be a Pair, not {bindings}.")
-
-        new_frame = Frame("anonymous let", frame)
-
-        bindings_holder = gui_holder.expression.children[1]
-
-        bindings = pair_to_list(bindings)
-
-        for i, binding in enumerate(bindings):
-            if not isinstance(binding, Pair):
-                raise OperandDeduceError(f"Expected binding to be a Pair, not {binding}.")
-            binding_holder = bindings_holder.expression.children[i]
-            binding = pair_to_list(binding)
-            if len(binding) != 2:
-                raise OperandDeduceError(f"Expected binding to be of length 2, not {len(binding)}.")
-            name, expr = binding
-            if not isinstance(name, Symbol):
-                raise OperandDeduceError(f"Expected first element of binding to be a Symbol, not {name}.")
-            new_frame.assign(name, evaluate(expr, frame, binding_holder.expression.children[1]))
-
-        value = None
-
-        for i, (operand, holder) in enumerate(zip(operands[1:], gui_holder.expression.children[2:])):
-            value = evaluate(operand, new_frame, holder, i == len(operands) - 2)
-
-        new_frame.assign(return_symbol, value)
-        return value
+        return _let_impl(self, "let", operands, frame, gui_holder, False)
 
 
 @special_form("variadic")
@@ -508,14 +537,6 @@ class Force(Applicable):
         return operand.expr
 
 
-@special_form("cons-stream")
-class ConsStream(Callable):
-    def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder):
-        verify_exact_callable_length(self, 2, len(operands))
-        operands[0] = evaluate(operands[0], frame, gui_holder.expression.children[1])
-        return Pair(operands[0], Promise(operands[1], frame))
-
-
 @special_form("expect")
 class Expect(Callable):
     def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder):
@@ -536,3 +557,126 @@ class Error(Applicable):
         if eval_operands:
             operands = evaluate_all(operands, frame, gui_holder.expression.children[1:])
         raise SchemeError(operands[0])
+
+
+# EECS 390 additions
+
+@special_form("let*")
+class LetStar(Callable):
+    def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder):
+        return _let_impl(self, "let*", operands, frame, gui_holder, True)
+
+
+@special_form("case")
+class Case(Callable):
+    def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder):
+        verify_min_callable_length(self, 2, len(operands))
+        key = evaluate(operands[0], frame, gui_holder.expression.children[1])
+        for case_i, case in enumerate(operands[1:]):
+            if not isinstance(case, Pair):
+                raise OperandDeduceError(f"Unable to evaluate clause of case, as {case} is not a Pair.")
+            expanded = pair_to_list(case)
+            case_holder = gui_holder.expression.children[case_i + 2]  # skip key
+            eval_condition = SingletonTrue
+            if (not isinstance(expanded[0], Symbol) or expanded[0].value != "else") \
+                   and isinstance(expanded[0], Pair):
+                eval_condition = Memv().execute_evaluated([key, expanded[0]], frame)
+            elif not isinstance(expanded[0], Symbol) or expanded[0].value != "else":
+                raise OperandDeduceError(f"Case clause expected list, received {expanded[0]}")
+            elif case_i != len(operands) - 2:  # exclude key from count
+                raise OperandDeduceError(f"Else clause can only be the last clause of case.")
+            if len(expanded) < 2:
+                raise OperandDeduceError(f"Case clause needs to have a length of at least two, received {case}.")
+            if (isinstance(expanded[0], Symbol) and expanded[0].value == "else") \
+                    or eval_condition is not SingletonFalse:
+                out = eval_condition
+                for i, expr in enumerate(expanded[1:]):
+                    out = evaluate(expr, frame, case_holder.expression.children[i + 1], i == len(expanded) - 2)
+                return out
+        return Undefined
+
+
+class UnsupportedCallable(Callable):
+    def execute(self, operands: List[Expression], frame: Frame, gui_holder: Holder):
+        raise UnsupportedOperationError(self)
+
+
+@special_form("letrec")
+class Letrec(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@special_form("do")
+class Do(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@special_form("let-syntax")
+class LetSyntax(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@special_form("letrec-syntax")
+class LetrecSyntax(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@special_form("syntax-rules")
+class SyntaxRules(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@special_form("define-syntax")
+class DefineSyntax(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("for-each")
+class ForEach(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("call-with-current-continuation")
+@global_attr("call/cc")
+class CallCC(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("values")
+class Values(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("call-with-values")
+class CallWithValues(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("dynamic-wind")
+class DynamicWind(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("scheme-report-environment")
+class SchemeReportEnvironment(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("null-environment")
+class NullEnvironment(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("interaction-environment")
+class InteractionEnvironment(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("transcript-on")
+class TranscriptOn(UnsupportedCallable):
+    pass  # unimplemented
+
+
+@global_attr("transcript-off")
+class TranscriptOff(UnsupportedCallable):
+    pass  # unimplemented

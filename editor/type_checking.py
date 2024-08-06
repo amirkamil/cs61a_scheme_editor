@@ -1,5 +1,5 @@
 from datamodel import Expression, Boolean, Number, Symbol, Nil, SingletonTrue, SingletonFalse, Pair, bools, \
-    String
+    String, Character, Vector
 from environment import global_attr
 from helper import pair_to_list
 from primitives import SingleOperandPrimitive
@@ -78,3 +78,50 @@ class IsString(SingleOperandPrimitive):
 class IsSymbol(SingleOperandPrimitive):
     def execute_simple(self, operand: Expression) -> Expression:
         return bools[isinstance(operand, Symbol)]
+
+
+# EECS 390 additions
+
+@global_attr("char?")
+class IsChar(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        return bools[isinstance(operand, Character)]
+
+@global_attr("vector?")
+class IsVector(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        return bools[isinstance(operand, Vector)]
+
+@global_attr("complex?")
+class IsComplex(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        return bools[isinstance(operand, Number)]
+
+@global_attr("real?")
+class IsReal(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        return bools[isinstance(operand, Number)]
+
+
+@global_attr("rational?")
+class IsRational(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression):
+        return bools[isinstance(operand, Number) and isinstance(operand.value, int)]
+
+
+@global_attr("input-port?")
+class IsInputPort(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        return bools[0]  # ports not supported
+
+
+@global_attr("output-port?")
+class IsInputPort(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        return bools[0]  # ports not supported
+
+
+@global_attr("eof-object?")
+class IsEOFObject(SingleOperandPrimitive):
+    def execute_simple(self, operand: Expression) -> Expression:
+        return bools[0]  # I/O not supported

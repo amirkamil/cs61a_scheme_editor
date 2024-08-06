@@ -1,9 +1,9 @@
 from typing import Dict, List, Union, Optional
 
 import log
-from datamodel import Symbol, Expression, Number, Pair, Nil, Undefined, Boolean, String, Promise
+from datamodel import Symbol, Expression, Number, Pair, Nil, Undefined, Boolean, String, Promise, Character, Vector
 from helper import pair_to_list
-from scheme_exceptions import SymbolLookupError, CallableResolutionError, IrreversibleOperationError, OutOfMemoryError
+from scheme_exceptions import SymbolLookupError, CallableResolutionError, IrreversibleOperationError, OutOfMemoryError, OperandDeduceError
 
 
 RECURSION_LIMIT = 100000
@@ -95,7 +95,8 @@ def evaluate(expr: Expression, frame: Frame, gui_holder: log.Holder,
                 or isinstance(expr, Callable) \
                 or isinstance(expr, Boolean) \
                 or isinstance(expr, String) \
-                or isinstance(expr, Promise):
+                or isinstance(expr, Promise) \
+                or isinstance(expr, Character):
             ret = expr
         elif isinstance(expr, Symbol):
             gui_holder.evaluate()
@@ -128,6 +129,8 @@ def evaluate(expr: Expression, frame: Frame, gui_holder: log.Holder,
                         gui_holder.expression.set_entries(list(x.expression for x in out.gui_holder.expression.children))
                     continue
                 ret = out
+        elif isinstance(expr, Vector):
+            raise OperandDeduceError(f"Cannot evaluate vector object: {expr}.")
         elif expr is Nil or expr is Undefined:
             ret = expr
         else:

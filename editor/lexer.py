@@ -50,6 +50,7 @@ class TokenBuffer:
 
 def tokenize(string, do_comments, ignore_brackets) -> List[Token]:
     string = string.strip()
+    parens = "(" if ignore_brackets else "(["
     tokens = []
     i = 0
     first_in_line = True
@@ -72,6 +73,11 @@ def tokenize(string, do_comments, ignore_brackets) -> List[Token]:
         elif string[i] in SPECIALS and not (ignore_brackets and string[i] in ["[", "]"]):
             tokens.append(Token(string[i]))
             i += 1
+
+        # EECS 390 addition
+        elif string[i] == "#" and i != len(string) - 1 and string[i+1] in parens:
+            tokens.append(Token(string[i: i+2]))
+            i += 2
 
         else:
             curr = ""

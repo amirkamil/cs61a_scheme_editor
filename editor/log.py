@@ -1,7 +1,7 @@
 from enum import Enum
 from typing import List, Union, Dict, Tuple, TYPE_CHECKING
 
-from datamodel import Expression, ValueHolder, Pair, Nil, Symbol, Undefined, Promise, NilType, UndefinedType
+from datamodel import Expression, ValueHolder, Pair, Nil, Symbol, Undefined, Promise, NilType, UndefinedType, Vector
 import evaluate_apply
 from helper import pair_to_list
 from log_utils import get_id
@@ -59,6 +59,8 @@ class VisualExpression:
                 self.set_entries(pair_to_list(base_expr))
             except OperandDeduceError:
                 self.set_entries([base_expr.first, base_expr.rest])
+        elif isinstance(base_expr, Vector):
+            self.set_entries(base_expr.value)
         else:
             raise NotImplementedError(base_expr, type(base_expr))
 
@@ -357,6 +359,8 @@ class Heap:
                 return False, "nil"
             elif isinstance(expr, UndefinedType):
                 return False, "undefined"
+            elif isinstance(expr, Vector):
+                val = [self.record(item) for item in expr.value]
             else:
                 # assume the repr method is good enough
                 val = [(False, repr(expr))]

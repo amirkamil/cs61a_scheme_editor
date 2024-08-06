@@ -54,3 +54,8 @@ class LoadError(SchemeError):
 
 class OutOfMemoryError(SchemeError):
     pass
+
+
+class UnsupportedOperationError(SchemeError):
+    def __init__(self, target):
+        super().__init__(f"This interpreter does not implement {target}.")
