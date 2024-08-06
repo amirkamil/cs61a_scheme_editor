@@ -293,7 +293,11 @@ def start(file_args, port, open_browser):
         httpd.serve_forever()
     except KeyboardInterrupt:
         print(" - Ctrl+C pressed")
+        if supports_color():
+            print("\033[91m" + "\033[1m" + "\033[4m", end="")
         print("Shutting down server - all unsaved work may be lost")
+        if supports_color():
+            print("\033[0m" * 3, end="")
         print(
 r'''
       _____   _______    ____    _____  
@@ -303,7 +307,3 @@ r'''
      ____) |    | |    | |__| | | |     
     |_____/     |_|     \____/  |_|     
 ''')
-        if supports_color():
-            print("\033[91m" + "\033[1m" + "\033[4m", end="")
-        if supports_color():
-            print("\033[0m" * 3, end="")
