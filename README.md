@@ -1,4 +1,5 @@
-# Scheme-o-matic
+# MiScheme Editor
+
 This tool is a web-based, locally-hosted editor and debugger for a
 variant of the Scheme programming language. It is forked from [61A
 Scheme](https://github.com/Cal-CS-61A-Staff/scheme_editor).
