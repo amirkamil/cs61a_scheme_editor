@@ -119,7 +119,9 @@ def get_rest_of_list(buffer: TokenBuffer, end_paren: str, is_vector: bool) -> Ex
             break
         elif logger.dotted and next == ".":
             if is_vector:
-                raise ParseError(f"Dot may not occur in a vector.")
+                raise ParseError("Dot may not occur in a vector.")
+            if not out:
+                raise ParseError("At least one expression must precede a dot in a dotted list.")
             buffer.pop_next_token()
             last = get_expression(buffer)
             if buffer.pop_next_token() != end_paren:
