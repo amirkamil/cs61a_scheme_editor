@@ -23,11 +23,11 @@ def reformat_files(src, dest=None, check=False):
     exit()
 
 
-parser = argparse.ArgumentParser(description="CS61A Scheme Editor - Spring 2021")
+parser = argparse.ArgumentParser(description="MiScheme Editor - Winter 2025")
 
 parser.add_argument("-f", "--files",
                     type=argparse.FileType('r+'),
-                    help="Scheme files to test",
+                    help="Scheme files to open",
                     metavar="FILE",
                     nargs='*')
 parser.add_argument("-nb", "--nobrowser",
@@ -65,8 +65,10 @@ if args.files is not None:
 else:
     file_names = []
     if len(configs) > 1:
-        parser.error("Multiple okpy configs detected, files to be tested must be specified explicitly.")
-    elif len(configs) > 0:
+        parser.error("Multiple configs detected, files to be opened must be specified explicitly.")
+    elif configs:
         with open(configs[0]) as f:
             file_names = [name for name in json.loads(f.read())["src"] if name.endswith(".scm")]
+    else:
+        file_names = ["scratch.scm"]
 local_server.start(file_names, args.port, not args.nobrowser)
